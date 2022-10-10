@@ -13,6 +13,9 @@
 #define TAG_LEL "\x5F\x02"
 #define TAG_TEMPERATURE "\x5F\x03"
 
+#define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data)) - 1
+#define NUM_DECIMALS_FORMAT "%.3f"
+
 class Communic
 {
     unsigned char *buffer;
@@ -36,7 +39,7 @@ public:
      * @return Error Code
      * @todo
      */
-    static int makeTLV(AirData airData, unsigned char **buffer);
+    static int makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer);
 
     /**
      * @brief sendMessageSerial
