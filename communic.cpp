@@ -5,7 +5,7 @@ Communic::Communic()
 
 }
 
-int Communic::parseAirDataTLV(unsigned char *data, int lengthData, AirData *airData)
+int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData)
 {
     float oxygen = -1;
     float carbonMonoxide = -1;
@@ -20,21 +20,21 @@ int Communic::parseAirDataTLV(unsigned char *data, int lengthData, AirData *airD
         lengthDataTag = 0;
         pos = 0;
         // tag
-        if ((data[i] & 0x1F) == 0x1F) {
-            aux[pos] = data[i];
+        if ((buffer[i] & 0x1F) == 0x1F) {
+            aux[pos] = buffer[i];
         }
         do {// has more tag bytes 1xxx xxxx
             pos++;
             i++;
-            aux[pos] = data[i];
-        } while ((data[i] & 0x80) == 0x80);
+            aux[pos] = buffer[i];
+        } while ((buffer[i] & 0x80) == 0x80);
         pos++;
         i++;
         memcpy(auxTag, aux, sizeof(auxTag));
         // length of tag
-        if ((data[i] & 0x80) != 0x80) {
-            if (data[i] != 0x80) {// is not a definite length
-                lengthDataTag += data[i] & 0x7F;
+        if ((buffer[i] & 0x80) != 0x80) {
+            if (buffer[i] != 0x80) {// is not a definite length
+                lengthDataTag += buffer[i] & 0x7F;
             } else {
                 printf("indefinite length not developed\n");
             }
@@ -45,28 +45,28 @@ int Communic::parseAirDataTLV(unsigned char *data, int lengthData, AirData *airD
         memset(aux, 0x00, sizeof(aux));
         if (memcmp(auxTag, TAG_OXYGEN, SIZEOF_TAG(TAG_OXYGEN)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
-                aux[j] =  data [i];
+                aux[j] =  buffer [i];
             }
             aux[j] = '\0';
             oxygen = strtof((char*)aux, NULL);
         }
         if (memcmp(auxTag, TAG_CARBON_MONOXIDE, SIZEOF_TAG(TAG_CARBON_MONOXIDE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
-                aux[j] =  data [i];
+                aux[j] =  buffer [i];
             }
             aux[j] = '\0';
             carbonMonoxide = strtof((char*)aux, NULL);
         }
         if (memcmp(auxTag, TAG_LEL, SIZEOF_TAG(TAG_LEL)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
-                aux[j] =  data [i];
+                aux[j] =  buffer [i];
             }
             aux[j] = '\0';
             lowerExplosiveLimit = strtof((char*)aux, NULL);
         }
         if (memcmp(auxTag, TAG_TEMPERATURE, SIZEOF_TAG(TAG_TEMPERATURE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
-                aux[j] =  data [i];
+                aux[j] =  buffer [i];
             }
             aux[j] = '\0';
             temperature = strtof((char*)aux, NULL);
@@ -199,32 +199,3 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
     }
     return 0;
 }
-
-/*
-  int getValueOfTLVTag(unsigned char *data, unsigned char **value, unsigned char *tag)
-{
-
-        //obtener tag y ver si es el pedido
-        //ver longitud
-        //guardar datos
-
-    int i = 0;
-    int lengthTag = 0;
-    int lengthDataTag = 0;
-    for(i = 0; memcmp(tag, data, tamTag), i++){
-        // has next tag byte xxx1 1111
-        if((data[i] & 0x1F) == 0x1F){
-            tamTag++;
-            i++;
-        }
-        // has more tag bytes 1xxx xxxx
-        while((data[i] & 0x80) == 0x80){
-            tamTag++;
-            i++;
-        }
-        //get length of data of the tag
-        if
-    }
-    // copy de data of the tag
-}
-*/
