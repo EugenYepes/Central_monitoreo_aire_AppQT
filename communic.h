@@ -29,7 +29,7 @@ public:
      * @param[out] airData fill the air data object
      * @return Error code
      */
-    static int parseAirDataTLV(unsigned char *data, int lengthData, AirData *airData);
+    static int parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData);
 
     /**
      * @brief makeTLV
@@ -55,6 +55,7 @@ public:
      */
     static int readMessageSerial(void);
 
+    void setMessageToSend(unsigned char *buffer);
 private:
     /**
      * @brief hexToAscii convert a hexadecimal array to a char array (string)
@@ -77,7 +78,6 @@ private:
      * @return 0 for success -1 otherwise
      */
     int asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
-    void setMessageToSend(unsigned char *buffer);
 };
 
 #endif // COMMUNIC_H
