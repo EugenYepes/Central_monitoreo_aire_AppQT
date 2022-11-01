@@ -8,15 +8,16 @@
 #define LO 0.0
 #define HI 100.0
 
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    QPixmap pix("E:/UTN/EnCurso/Info_2_linux/TPO/AppQt/CentralMonitoreo/FondoPrueba.bmp");
-    ui->label_Picture->setPixmap(pix.scaled(1000, 1000, Qt::KeepAspectRatio));
-    /*se puede hacer sin poner una ruta absoluta?
-     como hacer para que la imagen ocupe toda la pantalla*/
+
+    Resize_Image();
+
 }
 
 MainWindow::~MainWindow()
@@ -41,14 +42,34 @@ void MainWindow::on_pushButton_update_clicked()
 
 void MainWindow::on_pushButton_connectDB_clicked()
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName("127.0.0.1");
-    db.setUserName("root");
-    db.setPassword("root");
-    db.setDatabaseName("");
-
-    if(db.open()){
-        std::cout<<"conexion exitosa: "<<db.hostName().toLocal8Bit().data()<<std::endl;
-    }
+    AirDataDAO airDAO;
+    AirData *airData = new AirData();
+    AirData airData2(1.45, 1.65, 1.62, 20.32);
+    airDAO.deleteAllData();
+    // airDAO.selectDB(airData, 1);
+    // airDAO.insertDB(airData2);
 }
 
+
+void MainWindow::on_tabWidget_currentChanged(int index)
+{
+    Resize_Image();
+}
+
+void MainWindow::Resize_Image(void)
+{
+    /*
+    QPixmap pix("D:/UTN/EnCurso/Info_2_linux/TPO/AppQt/CentralMonitoreo/FondoPrueba.bmp");
+
+    QSize  Var = ui->tabWidget->size();
+
+    std::cout << "Width: " << Var.width() << " Height: " << Var.height() <<  std::endl;
+
+    ui->label_Historical->setPixmap(pix.scaled(Var, Qt::IgnoreAspectRatio));
+    */
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    Resize_Image();
+}

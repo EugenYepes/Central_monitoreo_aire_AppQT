@@ -14,11 +14,18 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QPushButton" name="pushButton">
+      <property name="text">
+       <string>PushButton</string>
+      </property>
+     </widget>
+    </item>
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="minimumSize">
@@ -166,6 +173,18 @@
        <attribute name="title">
         <string>Historical Data</string>
        </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QLabel" name="label_Historical">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+          <property name="scaledContents">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
