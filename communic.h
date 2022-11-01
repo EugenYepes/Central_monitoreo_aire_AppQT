@@ -13,6 +13,9 @@
 #define TAG_LEL "\x5F\x02"
 #define TAG_TEMPERATURE "\x5F\x03"
 
+#define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data)) - 1
+#define NUM_DECIMALS_FORMAT "%.3f"
+
 class Communic
 {
     unsigned char *buffer;
@@ -26,7 +29,7 @@ public:
      * @param[out] airData fill the air data object
      * @return Error code
      */
-    static int parseAirDataTLV(unsigned char *data, int lengthData, AirData *airData);
+    static int parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData);
 
     /**
      * @brief makeTLV
@@ -36,7 +39,7 @@ public:
      * @return Error Code
      * @todo
      */
-    static int makeTLV(AirData airData, unsigned char **buffer);
+    static int makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer);
 
     /**
      * @brief sendMessageSerial
@@ -52,6 +55,7 @@ public:
      */
     static int readMessageSerial(void);
 
+    void setMessageToSend(unsigned char *buffer);
 private:
     /**
      * @brief hexToAscii convert a hexadecimal array to a char array (string)
@@ -74,7 +78,6 @@ private:
      * @return 0 for success -1 otherwise
      */
     int asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
-    void setMessageToSend(unsigned char *buffer);
 };
 
 #endif // COMMUNIC_H
