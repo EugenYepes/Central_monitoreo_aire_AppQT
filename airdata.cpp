@@ -12,6 +12,14 @@ AirData::AirData(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, 
     this->temperature = temperature;
 }
 
+void AirData::loadDataFromDB(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature)
+{
+    this->oxygen = oxygen;
+    this->carbonMonoxide = carbonMonoxide;
+    this->lowerExplosiveLimit = lowerExplosiveLimit;
+    this->temperature = temperature;
+}
+
 AirData AirData::operator=(AirData airData)
 {
     oxygen = airData.oxygen;

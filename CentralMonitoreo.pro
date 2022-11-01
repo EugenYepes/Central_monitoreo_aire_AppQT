@@ -12,6 +12,7 @@ SOURCES += \
     airdata.cpp \
     airdatadao.cpp \
     communic.cpp \
+    graphictablegenerator.cpp \
     main.cpp \
     mainwindow.cpp \
     test.cpp
@@ -20,6 +21,7 @@ HEADERS += \
     airdata.h \
     airdatadao.h \
     communic.h \
+    graphictablegenerator.h \
     mainwindow.h \
     test.h
 
