@@ -23,9 +23,8 @@ public:
      * @param carbonMonoxide
      * @param lowerExplosiveLimit
      * @param temperature
-     * @return Error code
      */
-    int loadDataFromDB(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
+    void loadDataFromDB(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
     /**
      * @brief loadDataFromSerialPort
