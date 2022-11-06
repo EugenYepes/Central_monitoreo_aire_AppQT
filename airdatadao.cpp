@@ -54,11 +54,15 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
     // execute query
     std::cout << "is open" << std::endl;
     if (q.exec(query) == false) {
-        printf("ERROR fail to exec QUERY %d\n", db.lastError().type());
+        printf("ERROR fail to exec QUERY\n");
         return 2;
     }
     // get data
     q.first();
+    if (false == q.isValid()) {
+        printf("ERROR the regist doesn't exist");
+        return 3;
+    }
     oxygen = q.value(1).toFloat();
     carbonMonoxide = q.value(2).toFloat();
     lowerExplosiveLimit = q.value(3).toFloat();
@@ -90,7 +94,7 @@ int AirDataDAO::selectAllDB(AirData *data, int *numbElements)
     // execute query
     std::cout << "is open" << std::endl;
     if (q.exec(query) == false) {
-        printf("ERROR fail to exec QUERY %d\n", db.lastError().type());
+        printf("ERROR fail to exec QUERY\n");
         return 2;
     }
     // get data
@@ -157,12 +161,8 @@ int AirDataDAO::deleteAllData()
 int AirDataDAO::getLastID(void)
 {
     QSqlQuery q;
-    int id, retID = 0;
-    char cQuery[100];
-    sprintf(cQuery, SQL_QUERY_FORMAT_SELECT_ALL,
-            SQL_SELECT, SQL_FROM, SQL_TABLE_NAME);
-    std::cout << "SQL query: " << cQuery << std::endl;
-    QString query(cQuery);
+    int id;
+    QString query("SELECT MAX(ID) FROM datatable;");
 
     // open DB
     if (db.open() == false) {
@@ -177,33 +177,11 @@ int AirDataDAO::getLastID(void)
     }
 
     // get data
+    q.exec();
     q.first();
-    while (q.next()){
-        id = q.value(0).toFloat();
-        if (retID < id)
-            retID = id;
-    }
+    id = q.value(0).toInt();
 
     q.clear();
     db.close();
     return id;
-}
-
-int AirDataDAO::resetID(void)
-{
-    QSqlQuery q;
-    QString query("QUERY RESET ID");//TODO reset or reseed id get query
-
-    // open DB
-    if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
-        return 1;
-    }
-    // execute query
-    q.exec(query);
-
-    q.clear();
-    db.close();
-    return 0;
-    return 0;
 }

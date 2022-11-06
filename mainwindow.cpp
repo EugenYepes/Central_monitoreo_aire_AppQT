@@ -1,13 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QDebug>
-#include <QPixmap>
 #include <iostream>
 
 #define LO 0.0
 #define HI 100.0
-
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -16,8 +13,36 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    Resize_Image();
+    // create chart
+    QChart *chart = new QChart();
+    chart->createDefaultAxes();
+    chart->setTitle("Air data historical");
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
 
+    // show chart
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setParent(ui->horizontalFrame_chart);
+
+    // line 1
+    QLineSeries *series1 = new QLineSeries();
+    for (int i = 0; i < 20; i++) {
+        series1->append(i, (i +1)*2);
+        *series1 << QPointF(i, (i +1)*2);
+    }
+    series1->setName("Sulfur Dioxide");
+    chart->addSeries(series1);
+
+    //line 2
+    QLineSeries *series2 = new QLineSeries();
+    for (int i = 0; i < 20; i++) {
+        series2->append(i, (i +1)*(-2));
+        *series2 << QPointF(i, (i +1)*(-2));
+
+    }
+    series2->setName("Carbon Monoxide");
+    chart->addSeries(series2);
 }
 
 MainWindow::~MainWindow()
@@ -45,31 +70,7 @@ void MainWindow::on_pushButton_connectDB_clicked()
     AirDataDAO airDAO;
     AirData *airData = new AirData();
     AirData airData2(1.45, 1.65, 1.62, 20.32);
-    airDAO.deleteAllData();
-    // airDAO.selectDB(airData, 1);
-    // airDAO.insertDB(airData2);
-}
-
-
-void MainWindow::on_tabWidget_currentChanged(int index)
-{
-    Resize_Image();
-}
-
-void MainWindow::Resize_Image(void)
-{
-    /*
-    QPixmap pix("D:/UTN/EnCurso/Info_2_linux/TPO/AppQt/CentralMonitoreo/FondoPrueba.bmp");
-
-    QSize  Var = ui->tabWidget->size();
-
-    std::cout << "Width: " << Var.width() << " Height: " << Var.height() <<  std::endl;
-
-    ui->label_Historical->setPixmap(pix.scaled(Var, Qt::IgnoreAspectRatio));
-    */
-}
-
-void MainWindow::on_pushButton_clicked()
-{
-    Resize_Image();
+    // airDAO.deleteAllData();
+    airDAO.selectDB(airData, 21);
+    airDAO.insertDB(airData2);
 }
