@@ -88,14 +88,6 @@ public:
      * @return
      */
     int deleteAllData(void);
-
-private:
-    /**brief
-     * @ resetID
-     * reset the autoincrement ID
-     * @return error code
-     */
-    int resetID(void);
 };
 
 #endif // AIRDATADAO_H

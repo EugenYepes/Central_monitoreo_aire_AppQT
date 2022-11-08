@@ -3,7 +3,12 @@
 
 #include <QMainWindow>
 
+#include <QtCharts>
+#include <QChartView>
+#include <QLineSeries>
+
 #include "airdatadao.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -25,9 +30,6 @@ private slots:
 
     void on_pushButton_connectDB_clicked();
 
-    void on_tabWidget_currentChanged(int index);
-
-    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
