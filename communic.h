@@ -4,6 +4,10 @@
 #include "airdata.h"
 
 #include <QObject>
+#include <QIODevice>
+#include <QSerialPort>
+#include <QMutex>
+#include <QThread>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -16,10 +20,12 @@
 #define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data)) - 1
 #define NUM_DECIMALS_FORMAT "%.3f"
 
-class Communic
+class Communic : public QThread
 {
     unsigned char *buffer;
     bool isFormatTLV;
+    // thread
+    static QMutex mutex;
 public:
     Communic();
     /**
@@ -51,9 +57,10 @@ public:
     /**
      * @brief readMessageSerial
      * read message from the serial port and storage in the buffer
+     * open a thread to read the port
      * @return
      */
-    static int readMessageSerial(void);
+    int readMessageSerial(QString baudRate, QString portName);
 
     void setMessageToSend(unsigned char *buffer);
 private:

@@ -12,5 +12,5 @@ int main(int argc, char *argv[])
     if (0 != Test::testCommunic()) {
         std::cout << "ERROR TEST COMMUNICATIONS NOT PASSED" << std::endl;
     }
-    return a.exec();
+    return a.exec();;
 }

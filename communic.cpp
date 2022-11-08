@@ -199,3 +199,30 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
     }
     return 0;
 }
+
+int Communic::readMessageSerial(QString baudRate, QString portName)
+{
+    //open a new thread
+    QSerialPort serial;
+    const QMutexLocker locker(&mutex);
+    mutex.unlock();
+    start(); // start the thread
+
+    // in the thread
+    QByteArray data;
+    serial.setPortName(portName);
+    serial.setBaudRate(baudRate.toInt());
+    serial.close();
+
+    if (!serial.open(QIODevice::ReadWrite)) {
+        std::cout << "serial port doesn't open at function " << __func__ << std::endl;
+    }
+
+    while (true) {
+        while (serial.waitForReadyRead(10)) {
+            data += serial.readAll();
+        }
+        std::cout << data.toStdString() << std::endl;
+        data.clear();
+    }
+}
