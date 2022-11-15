@@ -10,13 +10,13 @@ AirDataDAO::AirDataDAO()
 int AirDataDAO::insertDB(AirData data)
 {
     std::cout << "Entering at function " << __func__ << std::endl;
-    std::cout << "db data " << data.getOxygen() << " " << data.getCarbonMonoxide() << " " << data.getLowerExplosiveLimit() << " " << data.getTemperature() << std::endl;
+    std::cout << "db data " << data.getSulfDioxide() << " " << data.getCarbonMonoxide() << " " << data.getLowerExplosiveLimit() << " " << data.getTemperature() << std::endl;
     QSqlQuery q;
     char cQuery[200];
     sprintf(cQuery, SQL_QUERY_FORMAT_INSERT,
             SQL_INSERT, SQL_TABLE_NAME, SQL_FIELD_OXY, SQL_FIELD_CO, SQL_FIELD_LEL, SQL_FIELD_TMP, SQL_FIELD_DATE, SQL_VALUES,
-            data.getOxygen(), data.getCarbonMonoxide(), data.getLowerExplosiveLimit(), data.getTemperature(),
-            "2022-10-30 00:13:41");
+            data.getSulfDioxide(), data.getCarbonMonoxide(), data.getLowerExplosiveLimit(), data.getTemperature(),
+            "2022-10-30 00:13:41");//todo get date
     std::cout << "SQL query: " << cQuery << std::endl;
     QString query(cQuery);
 
@@ -39,7 +39,7 @@ int AirDataDAO::insertDB(AirData data)
 int AirDataDAO::selectDB(AirData *data, int whereID)
 {
     QSqlQuery q;
-    float oxygen, carbonMonoxide, lowerExplosiveLimit, temperature;
+    float sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature;
     char cQuery[100];
     sprintf(cQuery, SQL_QUERY_FORMAT_SELECT,
             SQL_SELECT, SQL_FROM, SQL_TABLE_NAME, SQL_WHERE, SQL_TABLE_ID, whereID);
@@ -63,13 +63,13 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
         printf("ERROR the regist doesn't exist");
         return 3;
     }
-    oxygen = q.value(1).toFloat();
+    sulfDioxide = q.value(1).toFloat();
     carbonMonoxide = q.value(2).toFloat();
     lowerExplosiveLimit = q.value(3).toFloat();
     temperature = q.value(4).toFloat();
 
-    data->loadDataFromDB(oxygen, carbonMonoxide, lowerExplosiveLimit, temperature);
-    std::cout << "db data " << data->getOxygen() << " " << data->getCarbonMonoxide() << " " << data->getLowerExplosiveLimit() << " " << data->getTemperature() << std::endl;
+    data->loadDataFromDB(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
+    std::cout << "db data " << data->getSulfDioxide() << " " << data->getCarbonMonoxide() << " " << data->getLowerExplosiveLimit() << " " << data->getTemperature() << std::endl;
     q.clear();
     db.close();
     return 0;
@@ -78,7 +78,7 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
 int AirDataDAO::selectAllDB(AirData *data, int *numbElements)
 {
     QSqlQuery q;
-    float oxygen, carbonMonoxide, lowerExplosiveLimit, temperature;
+    float sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature;
     int i = 0;
     char cQuery[100];
     sprintf(cQuery, SQL_QUERY_FORMAT_SELECT,
@@ -100,11 +100,11 @@ int AirDataDAO::selectAllDB(AirData *data, int *numbElements)
     // get data
     q.first();
     while (q.next() && (i < *numbElements)){
-        oxygen = q.value(1).toFloat();
+        sulfDioxide = q.value(1).toFloat();
         carbonMonoxide = q.value(2).toFloat();
         lowerExplosiveLimit = q.value(3).toFloat();
         temperature = q.value(4).toFloat();
-        data[i].loadDataFromDB(oxygen, carbonMonoxide, lowerExplosiveLimit, temperature);
+        data[i].loadDataFromDB(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
         i++;
     }
     *numbElements = i;

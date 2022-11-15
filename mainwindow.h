@@ -8,6 +8,10 @@
 #include <QLineSeries>
 #include <QSerialPortInfo>
 
+//threads includes
+#include <unistd.h>
+#include <pthread.h>
+#include <signal.h>
 
 #include "airdatadao.h"
 #include "communic.h"
@@ -43,6 +47,7 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    Communic *communic;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
@@ -56,17 +61,17 @@ public:
      * @return
      */
     int showDataChart(AirData *airData, int quantityData);
-
-
-
 private slots:
-
-    void on_pushButton_update_clicked();
-
-    void on_pushButton_connectDB_clicked();
-
+    /**
+     * @brief updateDiplayData
+     * update the data displayed on the display
+     * call this function every time whe reciev new data, or update
+     */
+    void updateDiplayData();
 
     void on_pushButton_serialStart_clicked();
+
+    void on_pushButton_serialClose_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -87,6 +92,7 @@ private:
      * show all available ports
      */
     void showPorts(void);
+
 };
 
 #endif // MAINWINDOW_H

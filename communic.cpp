@@ -1,13 +1,19 @@
 #include "communic.h"
 
-Communic::Communic()
-{
+QString Communic::portName;
+QString Communic::baudRate;
+bool Communic::isConnected;
+AirData Communic::airData(2, 2, 2, 2);
 
+Communic::Communic(QString baudRate, QString portName)
+{
+    this->baudRate = baudRate;
+    this->portName = portName;
 }
 
 int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData)
 {
-    float oxygen = -1;
+    float sulfDioxide = -1;
     float carbonMonoxide = -1;
     float lowerExplosiveLimit = -1;
     float temperature = -100;
@@ -43,12 +49,12 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
         pos++;
         // get data
         memset(aux, 0x00, sizeof(aux));
-        if (memcmp(auxTag, TAG_OXYGEN, SIZEOF_TAG(TAG_OXYGEN)) == 0) {
+        if (memcmp(auxTag, TAG_SULFDIOXIDE, SIZEOF_TAG(TAG_SULFDIOXIDE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
                 aux[j] =  buffer [i];
             }
             aux[j] = '\0';
-            oxygen = strtof((char*)aux, NULL);
+            sulfDioxide = strtof((char*)aux, NULL);
         }
         if (memcmp(auxTag, TAG_CARBON_MONOXIDE, SIZEOF_TAG(TAG_CARBON_MONOXIDE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -73,12 +79,12 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
         }
 
     }
-    printf("in function %s %f %f %f %f\n", __func__, oxygen, carbonMonoxide, lowerExplosiveLimit, temperature);
-    if (oxygen == -1 || carbonMonoxide == -1 || lowerExplosiveLimit == -1 || temperature == -100){
+    printf("in function %s %f %f %f %f\n", __func__, sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
+    if (sulfDioxide == -1 || carbonMonoxide == -1 || lowerExplosiveLimit == -1 || temperature == -100){
         printf("the data isn't complete, INVALID\n");
         return -1;
     }
-    AirData airDataAux(oxygen, carbonMonoxide, lowerExplosiveLimit, temperature);
+    AirData airDataAux(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
     *airData = airDataAux;// overload = operator why i have a warning
     return 0;
 }
@@ -90,19 +96,19 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
     unsigned char auxDataSize = 0;
     *lengthBuffer = 0;
 
-    printf("Air data in function %s %.3f\t%.3f\t%.3f\t%.3f\n", __func__, airData.getOxygen(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature());
+    printf("Air data in function %s %.3f\t%.3f\t%.3f\t%.3f\n", __func__, airData.getSulfDioxide(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature());
 
-    // oxygen
-    memcpy(auxBuffer + *lengthBuffer, TAG_OXYGEN, SIZEOF_TAG(TAG_OXYGEN));
-    *lengthBuffer += SIZEOF_TAG(TAG_OXYGEN);
-    auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getOxygen());
+    // Culfure dioxide
+    memcpy(auxBuffer + *lengthBuffer, TAG_SULFDIOXIDE, SIZEOF_TAG(TAG_SULFDIOXIDE));
+    *lengthBuffer += SIZEOF_TAG(TAG_SULFDIOXIDE);
+    auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getSulfDioxide());
     *(auxBuffer + *lengthBuffer) = auxDataSize;
     (*lengthBuffer)++;
-    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, NUM_DECIMALS_FORMAT, airData.getOxygen());
+    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, NUM_DECIMALS_FORMAT, airData.getSulfDioxide());
 
     memset(auxDataBuffer, 0x00, sizeof(auxDataBuffer));
 
-    // carbonMonoxide
+    // Carbon Monoxide
     memcpy(auxBuffer + *lengthBuffer, TAG_CARBON_MONOXIDE, SIZEOF_TAG(TAG_CARBON_MONOXIDE));
     *lengthBuffer += SIZEOF_TAG(TAG_CARBON_MONOXIDE);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getCarbonMonoxide());
@@ -112,7 +118,7 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
 
     memset(auxDataBuffer, 0x00, sizeof(auxDataBuffer));
 
-    // lowerExplosiveLimit
+    // Lower Explosive Limit
     memcpy(auxBuffer + *lengthBuffer, TAG_LEL, SIZEOF_TAG(TAG_LEL));
     *lengthBuffer += SIZEOF_TAG(TAG_LEL);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getLowerExplosiveLimit());
@@ -122,7 +128,7 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
 
     memset(auxDataBuffer, 0x00, sizeof(auxDataBuffer));
 
-    // temperature
+    // Temperature
     memcpy(auxBuffer + *lengthBuffer, TAG_TEMPERATURE, SIZEOF_TAG(TAG_TEMPERATURE));
     *lengthBuffer += SIZEOF_TAG(TAG_TEMPERATURE);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getTemperature());
@@ -200,29 +206,47 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
     return 0;
 }
 
-int Communic::readMessageSerial(QString baudRate, QString portName)
+void *Communic::readMessageSerial(void* arg)
 {
-    //open a new thread
+    AirDataDAO airDataDAO;
     QSerialPort serial;
-    const QMutexLocker locker(&mutex);
-    mutex.unlock();
-    start(); // start the thread
-
-    // in the thread
-    QByteArray data;
     serial.setPortName(portName);
     serial.setBaudRate(baudRate.toInt());
     serial.close();
 
+
     if (!serial.open(QIODevice::ReadWrite)) {
         std::cout << "serial port doesn't open at function " << __func__ << std::endl;
+        return NULL;
     }
-
+    sleep(1);
     while (true) {
-        while (serial.waitForReadyRead(10)) {
+        QByteArray data = serial.readAll();
+        while (serial.waitForReadyRead(10))
             data += serial.readAll();
+        if (!data.isEmpty()) {
+            std::cout << "received data: " << data.toStdString() << std::endl;
+            if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airData) == 0) {
+                std::cout << "save data in DB" << std::endl;
+                airDataDAO.insertDB(airData);
+            }
         }
-        std::cout << data.toStdString() << std::endl;
-        data.clear();
     }
 }
+
+void Communic::createCommunicSerialThread()
+{
+    if (pthread_create(&thread, NULL, Communic::readMessageSerial, NULL) != 0) {
+        isConnected = true;
+        std::cout << "create thread " << thread << std::endl;
+    }
+}
+
+void Communic::closeCommunicSerialThread(void)
+{
+    if (pthread_kill(thread, 17) != 0) {
+        isConnected = false;
+        std::cout << "close thread " << thread << std::endl;
+    }
+}
+

@@ -14,7 +14,7 @@ int Test::testCommunic(void)
     AirData airDataTest;
     std::cout << "test parseAirDataTLV" << std::endl;
     retVal = Communic::parseAirDataTLV(buffer, sizeof(buffer), &airDataTest);
-    std::cout << airDataTest.getOxygen() << " " << airDataTest.getCarbonMonoxide() << " " << airDataTest.getLowerExplosiveLimit() << " " << airDataTest.getTemperature() << std::endl;
+    std::cout << airDataTest.getSulfDioxide() << " " << airDataTest.getCarbonMonoxide() << " " << airDataTest.getLowerExplosiveLimit() << " " << airDataTest.getTemperature() << std::endl;
     std::cout << "retVal: " << retVal << std::endl;
 
     int lengthBuffer;
@@ -29,7 +29,7 @@ int Test::testCommunic(void)
     AirData airDataTest2;
     std::cout << "test recover data" << std::endl;
     retVal = Communic::parseAirDataTLV(outBuffer, lengthBuffer, &airDataTest2);
-    std::cout << "after: " << airDataTest2.getOxygen() << " " << airDataTest2.getCarbonMonoxide() << " " << airDataTest2.getLowerExplosiveLimit() << " " << airDataTest2.getTemperature() << std::endl;
+    std::cout << "after: " << airDataTest2.getSulfDioxide() << " " << airDataTest2.getCarbonMonoxide() << " " << airDataTest2.getLowerExplosiveLimit() << " " << airDataTest2.getTemperature() << std::endl;
     std::cout << "retVal: " << retVal << std::endl;
     return retVal;
 }

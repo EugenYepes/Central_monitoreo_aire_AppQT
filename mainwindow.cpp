@@ -3,9 +3,6 @@
 
 #include <iostream>
 
-#define LO 0.0
-#define HI 100.0
-
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -15,37 +12,36 @@ MainWindow::MainWindow(QWidget *parent) :
 
     showBaudRates();
     showPorts();
+    QTimer timer;
+    connect(&timer, SIGNAL(tiemout()), this, SLOT(updateDiplayData()));
+    timer.start();
 }
+
 
 MainWindow::~MainWindow()
 {
+    std::cout << "closing app" << std::endl;
+    //close thread
+    if(communic->isConnected) {
+        communic->closeCommunicSerialThread();
+        delete communic;
+    } else {
+        std::cout << "trhead is not open, cant close the thread" << std::endl;
+    }
     delete ui;
 }
 
-
-void MainWindow::on_pushButton_update_clicked()
+void MainWindow::updateDiplayData()
 {
-    /*-set an event when reciev a data array from serial port
-      -parse data and fill an object with data
-      -diplayed the data
-      -read current data object*/
-    float r2 = LO + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(HI-LO)));
-    ui->lcdNumber_Oxigeno->display(r2 + 1);
-    ui->lcdNumber_Monoxido->display(r2 + 2);
-    ui->lcdNumber_Explosividad->display(r2 + 3);
-    ui->lcdNumber_Temperatura->display(r2 + 4);
+    if (communic->isConnected) {
+        std::cout << "update display data" << std::endl;
+        ui->lcdNumber_sulfDioxide->display(communic->getAirData().getSulfDioxide());
+        ui->lcdNumber_carbonMonoxide->display(communic->getAirData().getCarbonMonoxide());
+        ui->lcdNumber_lel->display(communic->getAirData().getLowerExplosiveLimit());
+        ui->lcdNumber_temperature->display(communic->getAirData().getTemperature());
+    }
 }
 
-
-void MainWindow::on_pushButton_connectDB_clicked()
-{
-    AirDataDAO airDAO;
-    AirData *airData = new AirData();
-    AirData airData2(1.45, 1.65, 1.62, 20.32);
-    // airDAO.deleteAllData();
-    airDAO.selectDB(airData, 21);
-    airDAO.insertDB(airData2);
-}
 
 int MainWindow::showDataChart(AirData *airData, int quantityData)
 {
@@ -109,7 +105,19 @@ void MainWindow::showPorts(void)
 
 void MainWindow::on_pushButton_serialStart_clicked()
 {
-    Communic communic;
-    communic.readMessageSerial(ui->comboBox_serialBaudRate->currentText(), ui->comboBox_serialPorts->currentText());
+    communic = new Communic(ui->comboBox_serialBaudRate->currentText(), ui->comboBox_serialPorts->currentText());
+    communic->createCommunicSerialThread();
+}
+
+
+void MainWindow::on_pushButton_serialClose_clicked()
+{
+    if(communic->isConnected) {
+        communic->closeCommunicSerialThread();
+        delete communic;
+    } else {
+        std::cout << "trhead is not open, cant close the thread" << std::endl;
+    }
+//    pthread_join(serialThread, NULL);
 }
 

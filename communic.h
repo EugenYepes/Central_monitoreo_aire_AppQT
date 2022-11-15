@@ -2,17 +2,20 @@
 #define COMMUNIC_H
 
 #include "airdata.h"
+#include "airdatadao.h"
 
 #include <QObject>
 #include <QIODevice>
 #include <QSerialPort>
-#include <QMutex>
-#include <QThread>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+//threads includes
+#include <unistd.h>
+#include <pthread.h>
+#include <signal.h>
 
-#define TAG_OXYGEN "\x5F\x00"
+#define TAG_SULFDIOXIDE "\x5F\x00"
 #define TAG_CARBON_MONOXIDE "\x5F\x01"
 #define TAG_LEL "\x5F\x02"
 #define TAG_TEMPERATURE "\x5F\x03"
@@ -20,14 +23,20 @@
 #define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data)) - 1
 #define NUM_DECIMALS_FORMAT "%.3f"
 
-class Communic : public QThread
+class Communic
 {
-    unsigned char *buffer;
     bool isFormatTLV;
-    // thread
-    static QMutex mutex;
+    static QString baudRate;
+    static QString portName;
+    pthread_t thread;
+    static AirData airData;
 public:
-    Communic();
+    static bool isConnected;
+    /**
+     *@brief communic constructor for serial comunication
+     */
+    Communic(QString baudRate, QString portName);
+
     /**
      * @brief parseTLV
      * reciev encoded data and parse to fill airData object
@@ -57,12 +66,29 @@ public:
     /**
      * @brief readMessageSerial
      * read message from the serial port and storage in the buffer
-     * open a thread to read the port
      * @return
      */
-    int readMessageSerial(QString baudRate, QString portName);
+    static void* readMessageSerial(void*);
 
+    /**
+     * @brief setMessageToSend
+     * @param buffer
+     */
     void setMessageToSend(unsigned char *buffer);
+
+    /**
+     * @brief createCommunicSerialThread
+     * @param thread
+     */
+    void createCommunicSerialThread(void);
+
+    /**
+     * @brief closeCommunicSerialThread
+     * @param thread
+     */
+    void closeCommunicSerialThread(void);
+
+    AirData getAirData(){return airData;};
 private:
     /**
      * @brief hexToAscii convert a hexadecimal array to a char array (string)

@@ -8,37 +8,37 @@
  */
 class AirData
 {
-    float oxygen;
+    float sulfDioxide;
     float carbonMonoxide;
     float lowerExplosiveLimit;
     float temperature;
 public:
     AirData();
-    AirData(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
+    AirData(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
     /**
      * @brief load Data From Data Base
      * call this method every time you need to update
-     * @param oxygen
+     * @param sulfDioxide
      * @param carbonMonoxide
      * @param lowerExplosiveLimit
      * @param temperature
      */
-    void loadDataFromDB(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
+    void loadDataFromDB(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
     /**
      * @brief loadDataFromSerialPort
-     * @param oxygen
+     * @param sulfDioxide
      * @param carbonMonoxide
      * @param lowerExplosiveLimit
      * @param temperature
      * @return Error code
      */
-    int loadDataFromSerialPort(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
+    int loadDataFromSerialPort(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
     AirData operator=(AirData airData);
 
-    float getOxygen(void){return oxygen;};
+    float getSulfDioxide(void){return sulfDioxide;};
     float getCarbonMonoxide(void){return carbonMonoxide;};
     float getLowerExplosiveLimit(void){return lowerExplosiveLimit;};
     float getTemperature(void){return temperature;};

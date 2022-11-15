@@ -19,7 +19,7 @@
 #define SQL_VALUES      " VALUES "
 #define SQL_AND         " AND "
 #define SQL_NONE        ""
-#define SQL_FIELD_OXY   " oxygen "
+#define SQL_FIELD_OXY   " sulfDioxide "
 #define SQL_FIELD_CO    " carbonMonoxide "
 #define SQL_FIELD_LEL   " lowerExplosiveLimit "
 #define SQL_FIELD_TMP   " temperature "
