@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-
+QTimer timer;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -12,9 +12,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     showBaudRates();
     showPorts();
-    QTimer timer;
-    connect(&timer, SIGNAL(tiemout()), this, SLOT(updateDiplayData()));
-    timer.start();
+
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateDiplayData()));
+    timer.start(1000);
 }
 
 
@@ -33,13 +33,14 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateDiplayData()
 {
-    if (communic->isConnected) {
+    std::cout << "update display data" << std::endl;
+//    if (communic->isConnected) {
         std::cout << "update display data" << std::endl;
         ui->lcdNumber_sulfDioxide->display(communic->getAirData().getSulfDioxide());
         ui->lcdNumber_carbonMonoxide->display(communic->getAirData().getCarbonMonoxide());
         ui->lcdNumber_lel->display(communic->getAirData().getLowerExplosiveLimit());
         ui->lcdNumber_temperature->display(communic->getAirData().getTemperature());
-    }
+//    }
 }
 
 

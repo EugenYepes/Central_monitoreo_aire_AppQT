@@ -20,6 +20,15 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
     int i, j, pos, lengthDataTag;
     unsigned char aux[50];
     unsigned char auxTag[10];
+    unsigned char checkByte = 0;
+    //check byte
+    for (i = 0; i < (lengthData - 1); i++) {
+        checkByte ^= buffer[i];
+    }
+    if (buffer[i] != checkByte) {
+        std::cout << "ERROR calculated checkByte dont match with the received byte" << std::endl;
+        return -1;
+    }
     for (i = 0, pos = 0; i < lengthData;) {
         memset(aux, 0x00, sizeof(aux));
         memset(auxTag, 0x00, sizeof(auxTag));
@@ -94,8 +103,10 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
     unsigned char auxBuffer[500] = {0};
     unsigned char auxDataBuffer[10] = {0};
     unsigned char auxDataSize = 0;
-    *lengthBuffer = 0;
+    unsigned char checkByte = 0;
+    int idx;
 
+    *lengthBuffer = 0;
     printf("Air data in function %s %.3f\t%.3f\t%.3f\t%.3f\n", __func__, airData.getSulfDioxide(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature());
 
     // Culfure dioxide
@@ -135,7 +146,13 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
     *(auxBuffer + *lengthBuffer) = auxDataSize;
     (*lengthBuffer)++;
     *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, "%.3f", airData.getTemperature());
-
+    // set a check byte to send
+    for (idx = 0; idx < *lengthBuffer; idx++) {
+        checkByte ^= auxBuffer[idx];
+    }
+    *(auxBuffer + *lengthBuffer) = checkByte;
+    (*lengthBuffer)++;
+    printf("calculated check byte in %s %d\n", __func__, *(auxBuffer + *lengthBuffer));
     *buffer = (unsigned char*)malloc(*lengthBuffer);
     memcpy(*buffer, auxBuffer, *lengthBuffer);
     return 0;
@@ -208,7 +225,7 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
 
 void *Communic::readMessageSerial(void* arg)
 {
-    AirDataDAO airDataDAO;
+    AirDataDAO *airDataDAO = new AirDataDAO();
     QSerialPort serial;
     serial.setPortName(portName);
     serial.setBaudRate(baudRate.toInt());
@@ -228,7 +245,8 @@ void *Communic::readMessageSerial(void* arg)
             std::cout << "received data: " << data.toStdString() << std::endl;
             if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airData) == 0) {
                 std::cout << "save data in DB" << std::endl;
-                airDataDAO.insertDB(airData);
+                airDataDAO->insertDB(airData);
+
             }
         }
     }

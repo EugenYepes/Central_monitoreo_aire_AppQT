@@ -7,6 +7,7 @@
 #include <QChartView>
 #include <QLineSeries>
 #include <QSerialPortInfo>
+#include <QTimer>
 
 //threads includes
 #include <unistd.h>
