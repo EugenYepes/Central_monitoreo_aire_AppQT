@@ -41,6 +41,8 @@ struct QextPortInfo {
     int productID;      ///< Product ID
 };
 
+#define AMOUNT_MEASURMENTS 20
+
 namespace Ui {
 class MainWindow;
 }
@@ -54,21 +56,19 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    /**
-     * @brief showDataChart
-     * show the data contained in airData
-     * @param airData       data to be show
-     * @param quantityData  number of register of data
-     * @return
-     */
-    int showDataChart(AirData *airData, int quantityData);
 private slots:
     /**
      * @brief updateDiplayData
      * update the data displayed on the display
      * call this function every time whe reciev new data, or update
      */
-    void updateDiplayData();
+    void updateDiplayData(void);
+
+    /**
+     * @brief showDataChart
+     * show the data contained obtained from data base
+     */
+    void showDataChart(void);
 
     void on_pushButton_serialStart_clicked();
 

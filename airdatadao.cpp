@@ -10,13 +10,18 @@ AirDataDAO::AirDataDAO()
 int AirDataDAO::insertDB(AirData data)
 {
     std::cout << "Entering at function " << __func__ << std::endl;
-    std::cout << "db data " << data.getSulfDioxide() << " " << data.getCarbonMonoxide() << " " << data.getLowerExplosiveLimit() << " " << data.getTemperature() << std::endl;
+    std::cout << "db data on " << __func__ << " " << data.getSulfDioxide() << " " << data.getCarbonMonoxide() << " " << data.getLowerExplosiveLimit() << " " << data.getTemperature() << std::endl;
     QSqlQuery q;
     char cQuery[200];
+    QDateTime qDate = QDateTime::currentDateTime();
+    QString sDate = qDate.toString(DATE_FORMAT);
+    QByteArray bDate = sDate.toLocal8Bit();
+    char *date = bDate.data();
+
     sprintf(cQuery, SQL_QUERY_FORMAT_INSERT,
             SQL_INSERT, SQL_TABLE_NAME, SQL_FIELD_OXY, SQL_FIELD_CO, SQL_FIELD_LEL, SQL_FIELD_TMP, SQL_FIELD_DATE, SQL_VALUES,
             data.getSulfDioxide(), data.getCarbonMonoxide(), data.getLowerExplosiveLimit(), data.getTemperature(),
-            "2022-10-30 00:13:41");//todo get date
+            date);//todo get date
     std::cout << "SQL query: " << cQuery << std::endl;
     QString query(cQuery);
 
@@ -51,8 +56,8 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
         printf("ERROR fail to open DB %d\n", db.lastError().type());
         return 1;
     }
+
     // execute query
-    std::cout << "is open" << std::endl;
     if (q.exec(query) == false) {
         printf("ERROR fail to exec QUERY\n");
         return 2;
@@ -69,7 +74,7 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
     temperature = q.value(4).toFloat();
 
     data->loadDataFromDB(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
-    std::cout << "db data " << data->getSulfDioxide() << " " << data->getCarbonMonoxide() << " " << data->getLowerExplosiveLimit() << " " << data->getTemperature() << std::endl;
+    std::cout << "db data on  " << __func__ << " " << data->getSulfDioxide() << " " << data->getCarbonMonoxide() << " " << data->getLowerExplosiveLimit() << " " << data->getTemperature() << std::endl;
     q.clear();
     db.close();
     return 0;
@@ -91,8 +96,8 @@ int AirDataDAO::selectAllDB(AirData *data, int *numbElements)
         printf("ERROR fail to open DB %d\n", db.lastError().type());
         return 1;
     }
+    
     // execute query
-    std::cout << "is open" << std::endl;
     if (q.exec(query) == false) {
         printf("ERROR fail to exec QUERY\n");
         return 2;
@@ -169,8 +174,8 @@ int AirDataDAO::getLastID(void)
         printf("ERROR fail to open DB %d\n", db.lastError().type());
         return 1;
     }
+
     // execute query
-    std::cout << "is open" << std::endl;
     if (q.exec(query) == false) {
         printf("ERROR fail to exec QUERY %d\n", db.lastError().type());
         return 2;

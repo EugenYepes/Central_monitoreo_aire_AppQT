@@ -246,7 +246,6 @@ void *Communic::readMessageSerial(void* arg)
             if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airData) == 0) {
                 std::cout << "save data in DB" << std::endl;
                 airDataDAO->insertDB(airData);
-
             }
         }
     }

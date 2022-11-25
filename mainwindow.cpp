@@ -3,7 +3,9 @@
 
 #include <iostream>
 
-QTimer timer;
+QTimer timerDisplay;
+QTimer timerCharts;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -13,8 +15,10 @@ MainWindow::MainWindow(QWidget *parent) :
     showBaudRates();
     showPorts();
 
-    connect(&timer, SIGNAL(timeout()), this, SLOT(updateDiplayData()));
-    timer.start(1000);
+    connect(&timerDisplay, SIGNAL(timeout()), this, SLOT(updateDiplayData()));
+    timerDisplay.start(1000);
+    connect(&timerCharts, SIGNAL(timeout()), this, SLOT(showDataChart()));
+    timerCharts.start(1000);
 }
 
 
@@ -44,8 +48,28 @@ void MainWindow::updateDiplayData()
 }
 
 
-int MainWindow::showDataChart(AirData *airData, int quantityData)
+void MainWindow::showDataChart(void)
 {
+    std::cout << "update charts data" << std::endl;
+    //get data from data base
+    AirData airData[AMOUNT_MEASURMENTS];
+    AirDataDAO *airDataDAO = new AirDataDAO();
+    int dbId = airDataDAO->getLastID();
+    int quantityOfReadData = 0, dontReadMore = 0;;
+
+    for (int idx = 0; idx < AMOUNT_MEASURMENTS && dbId > 0; idx++) {
+        if (airDataDAO->selectDB(&(airData[idx]), dbId) == 0) {
+            dbId--;
+            idx++;
+            quantityOfReadData++;
+        }
+        dontReadMore++;
+        if(dontReadMore > 100) {
+            std::cout << "dont find enough data" << std::endl;
+            break;
+        }
+    }
+
     // create chart
     QChart *chart = new QChart();
     chart->createDefaultAxes();
@@ -58,24 +82,41 @@ int MainWindow::showDataChart(AirData *airData, int quantityData)
     chartView->setRenderHint(QPainter::Antialiasing);
     chartView->setParent(ui->horizontalFrame_chart);
 
-    // line 1
-    QLineSeries *series1 = new QLineSeries();
-    for (int i = 0; i < 20; i++) {
-        series1->append(i, (i +1)*2);
-        *series1 << QPointF(i, (i +1)*2);
+    // Sulfur Dioxide
+    QLineSeries *seriesSulfurDioxide = new QLineSeries();
+    for (int i = 0; i < quantityOfReadData; i++) {
+        seriesSulfurDioxide->append(i, airData[i].getSulfDioxide());
+        *seriesSulfurDioxide << QPointF(i, airData[i].getSulfDioxide());
     }
-    series1->setName("Sulfur Dioxide");
-    chart->addSeries(series1);
+    seriesSulfurDioxide->setName("Sulfur Dioxide");
+    chart->addSeries(seriesSulfurDioxide);
 
-    //line 2
-    QLineSeries *series2 = new QLineSeries();
-    for (int i = 0; i < 20; i++) {
-        series2->append(i, (i +1)*(-2));
-        *series2 << QPointF(i, (i +1)*(-2));
+    // Carbon Monoxide
+    QLineSeries *seriesCarbonMonoxide = new QLineSeries();
+    for (int i = 0; i < quantityOfReadData; i++) {
+        seriesCarbonMonoxide->append(i, airData[i].getCarbonMonoxide());
+        *seriesCarbonMonoxide << QPointF(i, airData[i].getCarbonMonoxide());
     }
-    series2->setName("Carbon Monoxide");
-    chart->addSeries(series2);
-    return 0;
+    seriesCarbonMonoxide->setName("Carbon Monoxide");
+    chart->addSeries(seriesCarbonMonoxide);
+
+    // Lower Explosive Limit
+    QLineSeries *seriesLEL = new QLineSeries();
+    for (int i = 0; i < quantityOfReadData; i++) {
+        seriesLEL->append(i, airData[i].getLowerExplosiveLimit());
+        *seriesLEL << QPointF(i, airData[i].getLowerExplosiveLimit());
+    }
+    seriesLEL->setName("Lower Explosive Limit");
+    chart->addSeries(seriesLEL);
+
+    // Temperature
+    QLineSeries *seriesTemperature = new QLineSeries();
+    for (int i = 0; i < quantityOfReadData; i++) {
+        seriesTemperature->append(i, airData[i].getTemperature());
+        *seriesTemperature << QPointF(i, airData[i].getTemperature());
+    }
+    seriesTemperature->setName("Temperature");
+    chart->addSeries(seriesTemperature);
 }
 
 void MainWindow::showBaudRates(void)

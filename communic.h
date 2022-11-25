@@ -20,7 +20,7 @@
 #define TAG_LEL "\x5F\x02"
 #define TAG_TEMPERATURE "\x5F\x03"
 
-#define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data)) - 1
+#define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data))
 #define NUM_DECIMALS_FORMAT "%.3f"
 
 class Communic

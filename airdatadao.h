@@ -5,6 +5,7 @@
 
 #include <QtSql>
 #include <QSqlDatabase>
+#include <QDateTime>
 #include <iostream>
 
 
@@ -32,6 +33,8 @@
 #define SQL_QUERY_FORMAT_DELETE "%s%s%s%s%s=%d;"
 #define SQL_QUERY_FORMAT_SELECT_ALL "%s*%s%s;"
 #define SQL_QUERY_FORMAT_DELETE_ALL "%s%s%s;"
+
+#define DATE_FORMAT "dd.MM.yyyy hh:mm:ss"
 class AirDataDAO
 {
     QSqlDatabase db;
