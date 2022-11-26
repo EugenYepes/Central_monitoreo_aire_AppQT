@@ -52,6 +52,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     Communic *communic;
+    AirDataDAO *airDataDAO;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);

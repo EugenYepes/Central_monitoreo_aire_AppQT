@@ -14,6 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     showBaudRates();
     showPorts();
+    airDataDAO = new AirDataDAO();
 
     connect(&timerDisplay, SIGNAL(timeout()), this, SLOT(updateDiplayData()));
     timerDisplay.start(1000);
@@ -37,13 +38,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateDiplayData()
 {
-    LOG_MSG("update display data");
+    ///<@todo uncoment this line
 //    if (communic->isConnected) {
         LOG_MSG("update display data");
-        ui->lcdNumber_sulfDioxide->display(communic->getAirData().getSulfDioxide());
-        ui->lcdNumber_carbonMonoxide->display(communic->getAirData().getCarbonMonoxide());
-        ui->lcdNumber_lel->display(communic->getAirData().getLowerExplosiveLimit());
-        ui->lcdNumber_temperature->display(communic->getAirData().getTemperature());
+
+        AirData airData;
+        airDataDAO->selectDB(&airData, airDataDAO->getLastID());
+
+        ui->lcdNumber_sulfDioxide->display(airData.getSulfDioxide());
+        ui->lcdNumber_carbonMonoxide->display(airData.getCarbonMonoxide());
+        ui->lcdNumber_lel->display(airData.getLowerExplosiveLimit());
+        ui->lcdNumber_temperature->display(airData.getTemperature());
 //    }
 }
 
@@ -52,22 +57,12 @@ void MainWindow::showDataChart(void)
 {
     LOG_MSG("update charts data");
     //get data from data base
-    AirData airData[AMOUNT_MEASURMENTS];
-    AirDataDAO *airDataDAO = new AirDataDAO();
+    AirData airData[AMOUNT_MEASURMENTS];    
     int dbId = airDataDAO->getLastID();
-    int quantityOfReadData = 0, dontReadMore = 0;;
+    int quantityOfReadData = AMOUNT_MEASURMENTS;
 
-    for (int idx = 0; idx < AMOUNT_MEASURMENTS && dbId > 0; idx++) {
-        if (airDataDAO->selectDB(&(airData[idx]), dbId) == 0) {
-            dbId--;
-            idx++;
-            quantityOfReadData++;
-        }
-        dontReadMore++;
-        if(dontReadMore > 100) {
-            LOG_MSG("dont find enough data");
-            break;
-        }
+    if (airDataDAO->selectBetweenIntervalDB(airData, &quantityOfReadData, dbId, dbId - AMOUNT_MEASURMENTS + 1) != 0) {
+        return;
     }
 
     // create chart

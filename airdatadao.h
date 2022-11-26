@@ -34,6 +34,8 @@
 #define SQL_QUERY_FORMAT_DELETE "%s%s%s%s%s=%d;"
 #define SQL_QUERY_FORMAT_SELECT_ALL "%s*%s%s;"
 #define SQL_QUERY_FORMAT_DELETE_ALL "%s%s%s;"
+#define SQL_QUERY_FORMAT_SELECT_BETWEEN_ID "%s*%s%s%s%s>=%d%s%s<=%d;"
+
 
 #define DATE_FORMAT "dd.MM.yyyy hh:mm:ss"
 class AirDataDAO
@@ -52,7 +54,7 @@ public:
 
     /**
      * @brief selectDB
-     * QUERY: "SELECT campo1, campo2 FROM nombreTabla WHERE campoN = valor AND campoM = valor;"
+     * QUERY: "SELECT campo1, campo2 FROM nombreTabla WHERE campoN = valor;"
      * @param[out] data
      * @param[in] where id
      * @return Error Code
@@ -60,8 +62,24 @@ public:
     int selectDB(AirData *data, int whereID);
 
     /**
+     * @brief selectBetweenIntervalDB
+     * select all elements beetwen maxId and lowId
+     * dont overflow numbElements, numbElements contains the max elemntes to read
+     * numbElements also return the number of readed rows
+     * QUERY: "SELECT campo1, campo2 FROM nombreTabla WHERE campoN = valor AND campoM = valor;"
+     * @param[out] data
+     * @param[in uot] numbElements
+     * @param[in] maxId
+     * @param[in] lowID
+     * @return
+     */
+    int selectBetweenIntervalDB(AirData *data, int *numbElements, int maxId, int lowID);
+
+    /**
      * @brief selectDB
      * QUERY: "SELECT * FROM nombreTabla;"
+     * select all data from data table an only save the number of elements specified in #numbElements.
+     * if the table doesn't have enough rows in #numbElements is set the number of readed elements
      * @param[out] data
      * @param[in out] numbElements      number of elements of data, reciev the size of data and returns the number of loaded
      * @return error code

@@ -80,14 +80,53 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
     return 0;
 }
 
+int AirDataDAO::selectBetweenIntervalDB(AirData *data, int *numbElements, int maxId, int lowID)
+{
+    QSqlQuery q;
+    float sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature;
+    int i = 0;
+    char cQuery[100];
+    sprintf(cQuery, SQL_QUERY_FORMAT_SELECT_BETWEEN_ID,
+            SQL_SELECT, SQL_FROM, SQL_TABLE_NAME, SQL_WHERE, SQL_TABLE_ID, lowID, SQL_AND, SQL_TABLE_ID, maxId);
+    LOG_MSG("SQL query: %s", cQuery);
+    QString query(cQuery);
+
+    // open DB
+    if (db.open() == false) {
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
+        return 1;
+    }
+
+    // execute query
+    if (q.exec(query) == false) {
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
+        return 2;
+    }
+    // get data
+    q.first();
+    ///<@todo select from the ent to the first element (SELECT * FROM tableName ORDER BY col1 DESC LIMIT 1)   AS last
+    while (q.next() && (i < *numbElements)){
+        sulfDioxide = q.value(1).toFloat();
+        carbonMonoxide = q.value(2).toFloat();
+        lowerExplosiveLimit = q.value(3).toFloat();
+        temperature = q.value(4).toFloat();
+        data[i].loadDataFromDB(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
+        i++;
+    }
+    *numbElements = i;
+    q.clear();
+    db.close();
+    return 0;
+}
+
 int AirDataDAO::selectAllDB(AirData *data, int *numbElements)
 {
     QSqlQuery q;
     float sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature;
     int i = 0;
     char cQuery[100];
-    sprintf(cQuery, SQL_QUERY_FORMAT_SELECT,
-            SQL_SELECT, SQL_FROM, SQL_TABLE_NAME);
+    sprintf(cQuery, SQL_QUERY_FORMAT_SELECT_ALL,
+            SQL_SELECT, SQL_FROM, SQL_TABLE_NAME, SQL_NONE);
     LOG_MSG("SQL query: %s", cQuery);
     QString query(cQuery);
 
