@@ -27,8 +27,6 @@ public:
     void loadDataFromDB(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
 
-    AirData operator=(AirData airData);
-
     float getSulfDioxide(void){return sulfDioxide;};
     float getCarbonMonoxide(void){return carbonMonoxide;};
     float getLowerExplosiveLimit(void){return lowerExplosiveLimit;};

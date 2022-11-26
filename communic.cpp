@@ -255,7 +255,7 @@ void Communic::createCommunicSerialThread()
 {
     if (pthread_create(&thread, NULL, Communic::readMessageSerial, NULL) != 0) {
         isConnected = true;
-        LOG_MSG("create thread %d", thread);
+        LOG_MSG("create thread %d", (int)thread);
     }
 }
 
@@ -263,7 +263,7 @@ void Communic::closeCommunicSerialThread(void)
 {
     if (pthread_kill(thread, 17) != 0) {
         isConnected = false;
-        LOG_MSG("close thread %d", thread);
+        LOG_MSG("close thread %d", (int)thread);
     }
 }
 
