@@ -9,8 +9,8 @@ AirDataDAO::AirDataDAO()
 
 int AirDataDAO::insertDB(AirData data)
 {
-    std::cout << "Entering at function " << __func__ << std::endl;
-    std::cout << "db data on " << __func__ << " " << data.getSulfDioxide() << " " << data.getCarbonMonoxide() << " " << data.getLowerExplosiveLimit() << " " << data.getTemperature() << std::endl;
+    LOG_MSG("Entered");
+    LOG_MSG("db data to insert %.3f %.3f %.3f %.3f ", data.getSulfDioxide(), data.getCarbonMonoxide(), data.getLowerExplosiveLimit(), data.getTemperature());
     QSqlQuery q;
     char cQuery[200];
     QDateTime qDate = QDateTime::currentDateTime();
@@ -21,18 +21,18 @@ int AirDataDAO::insertDB(AirData data)
     sprintf(cQuery, SQL_QUERY_FORMAT_INSERT,
             SQL_INSERT, SQL_TABLE_NAME, SQL_FIELD_OXY, SQL_FIELD_CO, SQL_FIELD_LEL, SQL_FIELD_TMP, SQL_FIELD_DATE, SQL_VALUES,
             data.getSulfDioxide(), data.getCarbonMonoxide(), data.getLowerExplosiveLimit(), data.getTemperature(),
-            date);//todo get date
-    std::cout << "SQL query: " << cQuery << std::endl;
+            date);
+    LOG_MSG("SQL query: %s", cQuery);
     QString query(cQuery);
 
     // open DB
     if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
         return 1;
     }
     // execute query
     if (q.exec(query) == false) {
-        printf("ERROR fail to exec QUERY %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
         return 2;
     }
 
@@ -48,24 +48,24 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
     char cQuery[100];
     sprintf(cQuery, SQL_QUERY_FORMAT_SELECT,
             SQL_SELECT, SQL_FROM, SQL_TABLE_NAME, SQL_WHERE, SQL_TABLE_ID, whereID);
-    std::cout << "SQL query: " << cQuery << std::endl;
+    LOG_MSG("SQL query: %s", cQuery);
     QString query(cQuery);
 
     // open DB
     if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
         return 1;
     }
 
     // execute query
     if (q.exec(query) == false) {
-        printf("ERROR fail to exec QUERY\n");
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
         return 2;
     }
     // get data
     q.first();
     if (false == q.isValid()) {
-        printf("ERROR the regist doesn't exist");
+        LOG_MSG("ERROR the regist doesn't exist");
         return 3;
     }
     sulfDioxide = q.value(1).toFloat();
@@ -74,7 +74,7 @@ int AirDataDAO::selectDB(AirData *data, int whereID)
     temperature = q.value(4).toFloat();
 
     data->loadDataFromDB(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
-    std::cout << "db data on  " << __func__ << " " << data->getSulfDioxide() << " " << data->getCarbonMonoxide() << " " << data->getLowerExplosiveLimit() << " " << data->getTemperature() << std::endl;
+    LOG_MSG("db data selected %.3f %.3f %.3f %.3f ", data->getSulfDioxide(), data->getCarbonMonoxide(), data->getLowerExplosiveLimit(), data->getTemperature());
     q.clear();
     db.close();
     return 0;
@@ -88,18 +88,18 @@ int AirDataDAO::selectAllDB(AirData *data, int *numbElements)
     char cQuery[100];
     sprintf(cQuery, SQL_QUERY_FORMAT_SELECT,
             SQL_SELECT, SQL_FROM, SQL_TABLE_NAME);
-    std::cout << "SQL query: " << cQuery << std::endl;
+    LOG_MSG("SQL query: %s", cQuery);
     QString query(cQuery);
 
     // open DB
     if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
         return 1;
     }
     
     // execute query
     if (q.exec(query) == false) {
-        printf("ERROR fail to exec QUERY\n");
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
         return 2;
     }
     // get data
@@ -124,16 +124,19 @@ int AirDataDAO::deleteDB(int whereID)
     char cQuery[100];
     sprintf(cQuery, SQL_QUERY_FORMAT_DELETE,
            SQL_DELETE, SQL_FROM, SQL_TABLE_NAME, SQL_WHERE, SQL_TABLE_ID, whereID);
-    std::cout << "SQL query: " << cQuery << std::endl;
+    LOG_MSG("SQL query: %s", cQuery);
     QString query(cQuery);
 
     // open DB
     if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
         return 1;
     }
     // execute query
-    q.exec(query);
+    if (q.exec(query) == false) {
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
+        return 2;
+    }
 
     q.clear();
     db.close();
@@ -146,16 +149,19 @@ int AirDataDAO::deleteAllData()
     char cQuery[100];
     sprintf(cQuery, SQL_QUERY_FORMAT_DELETE_ALL,
            SQL_DELETE, SQL_FROM, SQL_TABLE_NAME);
-    std::cout << "SQL query: " << cQuery << std::endl;
+    LOG_MSG("SQL query: %s", cQuery);
     QString query(cQuery);
 
     // open DB
     if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
         return 1;
     }
     // execute query
-    q.exec(query);
+    if (q.exec(query) == false) {
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
+        return 2;
+    }
 
     q.clear();
     db.close();
@@ -171,13 +177,13 @@ int AirDataDAO::getLastID(void)
 
     // open DB
     if (db.open() == false) {
-        printf("ERROR fail to open DB %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
         return 1;
     }
 
     // execute query
     if (q.exec(query) == false) {
-        printf("ERROR fail to exec QUERY %d\n", db.lastError().type());
+        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
         return 2;
     }
 

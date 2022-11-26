@@ -2,6 +2,7 @@
 #define AIRDATADAO_H
 
 #include "airdata.h"
+#include "logs.h"
 
 #include <QtSql>
 #include <QSqlDatabase>

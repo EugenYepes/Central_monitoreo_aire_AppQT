@@ -26,7 +26,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
         checkByte ^= buffer[i];
     }
     if (buffer[i] != checkByte) {
-        std::cout << "ERROR calculated checkByte dont match with the received byte" << std::endl;
+        LOG_MSG("ERROR calculated checkByte dont match with the received byte");
         return -1;
     }
     for (i = 0, pos = 0; i < lengthData;) {
@@ -51,7 +51,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             if (buffer[i] != 0x80) {// is not a definite length
                 lengthDataTag += buffer[i] & 0x7F;
             } else {
-                printf("indefinite length not developed\n");
+                LOG_MSG("indefinite length not developed");
             }
         }
         i++;
@@ -88,9 +88,9 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
         }
 
     }
-    printf("in function %s %f %f %f %f\n", __func__, sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
+    LOG_MSG("end parced data %f %f %f %f", sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
     if (sulfDioxide == -1 || carbonMonoxide == -1 || lowerExplosiveLimit == -1 || temperature == -100){
-        printf("the data isn't complete, INVALID\n");
+        LOG_MSG("the data isn't complete, INVALID");
         return -1;
     }
     AirData airDataAux(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
@@ -107,7 +107,7 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
     int idx;
 
     *lengthBuffer = 0;
-    printf("Air data in function %s %.3f\t%.3f\t%.3f\t%.3f\n", __func__, airData.getSulfDioxide(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature());
+    LOG_MSG("Data to make a TLV %.3f\t%.3f\t%.3f\t%.3f\n", airData.getSulfDioxide(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature())
 
     // Culfure dioxide
     memcpy(auxBuffer + *lengthBuffer, TAG_SULFDIOXIDE, SIZEOF_TAG(TAG_SULFDIOXIDE));
@@ -152,7 +152,7 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
     }
     *(auxBuffer + *lengthBuffer) = checkByte;
     (*lengthBuffer)++;
-    printf("calculated check byte in %s %d\n", __func__, *(auxBuffer + *lengthBuffer));
+    LOG_MSG("calculated check byte to send %d\n", *(auxBuffer + *lengthBuffer));
     *buffer = (unsigned char*)malloc(*lengthBuffer);
     memcpy(*buffer, auxBuffer, *lengthBuffer);
     return 0;
@@ -169,7 +169,7 @@ int Communic::hexToAscii(unsigned char *buffInHex, int tamIn, unsigned char **bu
     *tamOut = (tamIn * 2) + 1;
     *buffOutChar = (unsigned char*)malloc((*tamOut) * sizeof(unsigned char));// malloc no funca para el micro, no se le puede pedir al SO
     if (*buffOutChar == NULL) {
-        printf("ERROR at malloc memory at function %s", __func__);
+        LOG_MSG("ERROR at malloc memory dont get");
         return -1;
     }
 
@@ -202,7 +202,7 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
     *tamOut = tamIn/2;
     *buffOutHex = (unsigned char*)malloc((*tamOut) * sizeof(unsigned char));
     if (*buffOutHex == NULL) {
-        printf("ERROR at malloc memory at function %s", __func__);
+        LOG_MSG("ERROR at malloc memory dont get");
         return -1;
     }
 
@@ -233,7 +233,7 @@ void *Communic::readMessageSerial(void* arg)
 
 
     if (!serial.open(QIODevice::ReadWrite)) {
-        std::cout << "serial port doesn't open at function " << __func__ << std::endl;
+        LOG_MSG("serial port doesn't open");
         return NULL;
     }
     sleep(1);
@@ -242,9 +242,9 @@ void *Communic::readMessageSerial(void* arg)
         while (serial.waitForReadyRead(10))
             data += serial.readAll();
         if (!data.isEmpty()) {
-            std::cout << "received data: " << data.toStdString() << std::endl;
+            LOG_MSG("received data: %s", data.toStdString().data());
             if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airData) == 0) {
-                std::cout << "save data in DB" << std::endl;
+                LOG_MSG("save recieved data in DB");
                 airDataDAO->insertDB(airData);
             }
         }
@@ -255,7 +255,7 @@ void Communic::createCommunicSerialThread()
 {
     if (pthread_create(&thread, NULL, Communic::readMessageSerial, NULL) != 0) {
         isConnected = true;
-        std::cout << "create thread " << thread << std::endl;
+        LOG_MSG("create thread %d", thread);
     }
 }
 
@@ -263,7 +263,7 @@ void Communic::closeCommunicSerialThread(void)
 {
     if (pthread_kill(thread, 17) != 0) {
         isConnected = false;
-        std::cout << "close thread " << thread << std::endl;
+        LOG_MSG("close thread %d", thread);
     }
 }
 

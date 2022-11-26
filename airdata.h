@@ -26,15 +26,6 @@ public:
      */
     void loadDataFromDB(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
-    /**
-     * @brief loadDataFromSerialPort
-     * @param sulfDioxide
-     * @param carbonMonoxide
-     * @param lowerExplosiveLimit
-     * @param temperature
-     * @return Error code
-     */
-    int loadDataFromSerialPort(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature);
 
     AirData operator=(AirData airData);
 

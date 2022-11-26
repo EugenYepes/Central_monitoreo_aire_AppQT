@@ -24,22 +24,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    std::cout << "closing app" << std::endl;
+    LOG_MSG("closing app");
     //close thread
     if(communic->isConnected) {
         communic->closeCommunicSerialThread();
         delete communic;
     } else {
-        std::cout << "trhead is not open, cant close the thread" << std::endl;
+        LOG_MSG("trhead is not open, cant close the thread");
     }
     delete ui;
 }
 
 void MainWindow::updateDiplayData()
 {
-    std::cout << "update display data" << std::endl;
+    LOG_MSG("update display data");
 //    if (communic->isConnected) {
-        std::cout << "update display data" << std::endl;
+        LOG_MSG("update display data");
         ui->lcdNumber_sulfDioxide->display(communic->getAirData().getSulfDioxide());
         ui->lcdNumber_carbonMonoxide->display(communic->getAirData().getCarbonMonoxide());
         ui->lcdNumber_lel->display(communic->getAirData().getLowerExplosiveLimit());
@@ -50,7 +50,7 @@ void MainWindow::updateDiplayData()
 
 void MainWindow::showDataChart(void)
 {
-    std::cout << "update charts data" << std::endl;
+    LOG_MSG("update charts data");
     //get data from data base
     AirData airData[AMOUNT_MEASURMENTS];
     AirDataDAO *airDataDAO = new AirDataDAO();
@@ -65,7 +65,7 @@ void MainWindow::showDataChart(void)
         }
         dontReadMore++;
         if(dontReadMore > 100) {
-            std::cout << "dont find enough data" << std::endl;
+            LOG_MSG("dont find enough data");
             break;
         }
     }
@@ -158,7 +158,7 @@ void MainWindow::on_pushButton_serialClose_clicked()
         communic->closeCommunicSerialThread();
         delete communic;
     } else {
-        std::cout << "trhead is not open, cant close the thread" << std::endl;
+        LOG_MSG("trhead is not open, cant close the thread");
     }
 //    pthread_join(serialThread, NULL);
 }

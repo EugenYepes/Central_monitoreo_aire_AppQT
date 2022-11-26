@@ -3,6 +3,7 @@
 
 #include "airdata.h"
 #include "airdatadao.h"
+#include "logs.h"
 
 #include <QObject>
 #include <QIODevice>

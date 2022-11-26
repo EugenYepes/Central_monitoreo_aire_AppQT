@@ -16,6 +16,7 @@
 
 #include "airdatadao.h"
 #include "communic.h"
+#include "logs.h"
 
 
 enum BaudRateType {
