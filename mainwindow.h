@@ -52,13 +52,32 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
     Communic *communic;
-    AirDataDAO *airDataDAO;
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
+    /**
+     * @brief updateWrap
+     * wrapper to update screens
+     */
+    void updateWrap(void);
+
+    void on_pushButton_serialStart_clicked();
+
+    void on_pushButton_serialClose_clicked();
+
+    void on_pushButto_deleteAllDB_clicked();
+
+private:
+    Ui::MainWindow *ui;
+    struct
+    {
+        BaudRateType    BaudRate;
+        QString         Nombre;
+    }BaudRates[6];
+
     /**
      * @brief updateDiplayData
      * update the data displayed on the display
@@ -71,18 +90,6 @@ private slots:
      * show the data contained obtained from data base
      */
     void showDataChart(void);
-
-    void on_pushButton_serialStart_clicked();
-
-    void on_pushButton_serialClose_clicked();
-
-private:
-    Ui::MainWindow *ui;
-    struct
-    {
-        BaudRateType    BaudRate;
-        QString         Nombre;
-    }BaudRates[6];
 
     /**
      * @brief showBaudRates

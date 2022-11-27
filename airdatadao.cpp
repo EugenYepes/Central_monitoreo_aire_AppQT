@@ -9,7 +9,6 @@ AirDataDAO::AirDataDAO()
 
 int AirDataDAO::insertDB(AirData data)
 {
-    LOG_MSG("Entered");
     LOG_MSG("db data to insert %.3f %.3f %.3f %.3f ", data.getSulfDioxide(), data.getCarbonMonoxide(), data.getLowerExplosiveLimit(), data.getTemperature());
     QSqlQuery q;
     char cQuery[200];
@@ -204,7 +203,6 @@ int AirDataDAO::deleteAllData()
 
     q.clear();
     db.close();
-    return 0;
     return 0;
 }
 

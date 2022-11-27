@@ -106,7 +106,7 @@ public:
     /**
      * @brief deleteAllData
      * Delete all data form data base
-     * QUERY: "DELTE FROM nombreTabla;"
+     * QUERY: "DELETE FROM nombreTabla;"
      * @return
      */
     int deleteAllData(void);

@@ -3,7 +3,8 @@
 QString Communic::portName;
 QString Communic::baudRate;
 bool Communic::isConnected;
-AirData Communic::airData(2, 2, 2, 2);
+AirData Communic::airData(-2, -2, -2, -200);
+extern AirDataDAO *g_airDataDAO;
 
 Communic::Communic(QString baudRate, QString portName)
 {
@@ -225,7 +226,6 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
 
 void *Communic::readMessageSerial(void* arg)
 {
-    AirDataDAO *airDataDAO = new AirDataDAO();
     QSerialPort serial;
     serial.setPortName(portName);
     serial.setBaudRate(baudRate.toInt());
@@ -242,10 +242,11 @@ void *Communic::readMessageSerial(void* arg)
         while (serial.waitForReadyRead(10))
             data += serial.readAll();
         if (!data.isEmpty()) {
-            LOG_MSG("received data: %s", data.toStdString().data());
+            LOG_MSG("received data: ");
+            LOG_HEX((unsigned char*)data.data(), data.size());
             if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airData) == 0) {
                 LOG_MSG("save recieved data in DB");
-                airDataDAO->insertDB(airData);
+                g_airDataDAO->insertDB(airData);
             }
         }
     }

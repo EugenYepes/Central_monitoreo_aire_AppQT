@@ -12,6 +12,7 @@ SOURCES += \
     airdata.cpp \
     airdatadao.cpp \
     communic.cpp \
+    logs.cpp \
     main.cpp \
     mainwindow.cpp \
     test.cpp

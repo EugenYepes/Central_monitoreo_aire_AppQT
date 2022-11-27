@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="minimumSize">
@@ -220,6 +220,19 @@
         </property>
         <property name="text">
          <string>Close</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButto_deleteAllDB">
+        <property name="geometry">
+         <rect>
+          <x>720</x>
+          <y>170</y>
+          <width>80</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Clean Data Base</string>
         </property>
        </widget>
       </widget>

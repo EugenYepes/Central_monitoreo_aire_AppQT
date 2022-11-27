@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-QTimer timerDisplay;
-QTimer timerCharts;
+QTimer timer;
+AirDataDAO *g_airDataDAO;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -14,12 +14,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     showBaudRates();
     showPorts();
-    airDataDAO = new AirDataDAO();
+    g_airDataDAO = new AirDataDAO();
 
-    connect(&timerDisplay, SIGNAL(timeout()), this, SLOT(updateDiplayData()));
-    timerDisplay.start(1000);
-    connect(&timerCharts, SIGNAL(timeout()), this, SLOT(showDataChart()));
-    timerCharts.start(1000);
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateWrap()));
+    timer.start(1000);
 }
 
 
@@ -36,6 +34,12 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::updateWrap()
+{
+    updateDiplayData();
+    showDataChart();
+}
+
 void MainWindow::updateDiplayData()
 {
     ///<@todo uncoment this line
@@ -43,7 +47,7 @@ void MainWindow::updateDiplayData()
         LOG_MSG("update display data");
 
         AirData airData;
-        airDataDAO->selectDB(&airData, airDataDAO->getLastID());
+        g_airDataDAO->selectDB(&airData, g_airDataDAO->getLastID());
 
         ui->lcdNumber_sulfDioxide->display(airData.getSulfDioxide());
         ui->lcdNumber_carbonMonoxide->display(airData.getCarbonMonoxide());
@@ -58,10 +62,10 @@ void MainWindow::showDataChart(void)
     LOG_MSG("update charts data");
     //get data from data base
     AirData airData[AMOUNT_MEASURMENTS];    
-    int dbId = airDataDAO->getLastID();
+    int dbId = g_airDataDAO->getLastID();
     int quantityOfReadData = AMOUNT_MEASURMENTS;
 
-    if (airDataDAO->selectBetweenIntervalDB(airData, &quantityOfReadData, dbId, dbId - AMOUNT_MEASURMENTS + 1) != 0) {
+    if (g_airDataDAO->selectBetweenIntervalDB(airData, &quantityOfReadData, dbId, dbId - AMOUNT_MEASURMENTS + 1) != 0) {
         return;
     }
 
@@ -156,5 +160,13 @@ void MainWindow::on_pushButton_serialClose_clicked()
         LOG_MSG("trhead is not open, cant close the thread");
     }
 //    pthread_join(serialThread, NULL);
+}
+
+
+void MainWindow::on_pushButto_deleteAllDB_clicked()
+{
+    ///<@todo read a confirmation
+    ///<@todo add an administrator user
+    g_airDataDAO->deleteAllData();
 }
 
