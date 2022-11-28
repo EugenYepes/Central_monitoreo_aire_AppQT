@@ -38,21 +38,29 @@ void MainWindow::updateWrap()
 {
     updateDiplayData();
     showDataChart();
+    updateDB();
 }
 
 void MainWindow::updateDiplayData()
 {
     ///<@todo uncoment this line
+    int lastID;
+    if (g_airDataDAO->getLastID(&lastID) != SUCCESS) {
+        LOG_MSG("Last id not found");
+        return;
+    }
 //    if (communic->isConnected) {
         LOG_MSG("update display data");
 
         AirData airData;
-        g_airDataDAO->selectDB(&airData, g_airDataDAO->getLastID());
+        g_airDataDAO->selectDB(&airData, lastID);
 
         ui->lcdNumber_sulfDioxide->display(airData.getSulfDioxide());
         ui->lcdNumber_carbonMonoxide->display(airData.getCarbonMonoxide());
         ui->lcdNumber_lel->display(airData.getLowerExplosiveLimit());
         ui->lcdNumber_temperature->display(airData.getTemperature());
+//    } else {
+//      show message the serial port isn't connect
 //    }
 }
 
@@ -62,25 +70,20 @@ void MainWindow::showDataChart(void)
     LOG_MSG("update charts data");
     //get data from data base
     AirData airData[AMOUNT_MEASURMENTS];    
-    int dbId = g_airDataDAO->getLastID();
+    int dbId;
     int quantityOfReadData = AMOUNT_MEASURMENTS;
 
-    if (g_airDataDAO->selectBetweenIntervalDB(airData, &quantityOfReadData, dbId, dbId - AMOUNT_MEASURMENTS + 1) != 0) {
+    if (g_airDataDAO->getLastID(&dbId) != SUCCESS) {
+        LOG_MSG("Last id not found");
         return;
     }
 
-    // create chart
-    QChart *chart = new QChart();
-    chart->createDefaultAxes();
-    chart->setTitle("Air data historical");
-    chart->legend()->setVisible(true);
-    chart->legend()->setAlignment(Qt::AlignBottom);
+    if (g_airDataDAO->selectBetweenIntervalDB(airData, &quantityOfReadData, dbId, dbId - AMOUNT_MEASURMENTS + 1) != 0) {
+        LOG_MSG("ERROR data dont found");
+        return;
+    }
 
-    // show chart
-    QChartView *chartView = new QChartView(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
-    chartView->setParent(ui->horizontalFrame_chart);
-
+    // create series
     // Sulfur Dioxide
     QLineSeries *seriesSulfurDioxide = new QLineSeries();
     for (int i = 0; i < quantityOfReadData; i++) {
@@ -88,7 +91,6 @@ void MainWindow::showDataChart(void)
         *seriesSulfurDioxide << QPointF(i, airData[i].getSulfDioxide());
     }
     seriesSulfurDioxide->setName("Sulfur Dioxide");
-    chart->addSeries(seriesSulfurDioxide);
 
     // Carbon Monoxide
     QLineSeries *seriesCarbonMonoxide = new QLineSeries();
@@ -97,7 +99,7 @@ void MainWindow::showDataChart(void)
         *seriesCarbonMonoxide << QPointF(i, airData[i].getCarbonMonoxide());
     }
     seriesCarbonMonoxide->setName("Carbon Monoxide");
-    chart->addSeries(seriesCarbonMonoxide);
+
 
     // Lower Explosive Limit
     QLineSeries *seriesLEL = new QLineSeries();
@@ -106,7 +108,7 @@ void MainWindow::showDataChart(void)
         *seriesLEL << QPointF(i, airData[i].getLowerExplosiveLimit());
     }
     seriesLEL->setName("Lower Explosive Limit");
-    chart->addSeries(seriesLEL);
+
 
     // Temperature
     QLineSeries *seriesTemperature = new QLineSeries();
@@ -115,7 +117,34 @@ void MainWindow::showDataChart(void)
         *seriesTemperature << QPointF(i, airData[i].getTemperature());
     }
     seriesTemperature->setName("Temperature");
+
+
+    // create chart
+    QChart *chart = new QChart();
+    chart->setTitle("Air data historical");
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    // add series
+    chart->addSeries(seriesSulfurDioxide);
+    chart->addSeries(seriesCarbonMonoxide);
+    chart->addSeries(seriesLEL);
     chart->addSeries(seriesTemperature);
+
+    chart->createDefaultAxes();
+
+    // show chart
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setParent(ui->horizontalFrame_chart);
+}
+
+void MainWindow::updateDB(void)
+{
+    if(false == Communic::getReadValue()) {
+        if (g_airDataDAO->insertDB(communic->getAirData()) == 0)
+            Communic::setReadValue(true);
+    }
 }
 
 void MainWindow::showBaudRates(void)

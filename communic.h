@@ -31,6 +31,7 @@ class Communic
     static QString portName;
     pthread_t thread;
     static AirData airData;
+    static bool readValue;
 public:
     static bool isConnected;
     /**
@@ -90,6 +91,8 @@ public:
     void closeCommunicSerialThread(void);
 
     AirData getAirData(){return airData;};
+    static bool getReadValue() {return readValue;};
+    static void setReadValue(bool readValue) {Communic::readValue = readValue;};
 private:
     /**
      * @brief hexToAscii convert a hexadecimal array to a char array (string)

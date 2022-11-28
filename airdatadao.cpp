@@ -26,12 +26,12 @@ int AirDataDAO::insertDB(AirData data)
 
     // open DB
     if (db.open() == false) {
-        LOG_MSG("ERROR fail to open DB %d", db.lastError().type());
+        LOG_MSG("ERROR fail to open DB %d", db.lastError().text().data());
         return 1;
     }
     // execute query
     if (q.exec(query) == false) {
-        LOG_MSG("ERROR fail to exec QUERY %d", db.lastError().type());
+        LOG_MSG("ERROR fail to exec QUERY %s", db.lastError().text().data());
         return 2;
     }
 
@@ -206,10 +206,9 @@ int AirDataDAO::deleteAllData()
     return 0;
 }
 
-int AirDataDAO::getLastID(void)
+int AirDataDAO::getLastID(int *id)
 {
     QSqlQuery q;
-    int id;
     QString query("SELECT MAX(ID) FROM datatable;");
 
     // open DB
@@ -227,9 +226,9 @@ int AirDataDAO::getLastID(void)
     // get data
     q.exec();
     q.first();
-    id = q.value(0).toInt();
+    *id = q.value(0).toInt();
 
     q.clear();
     db.close();
-    return id;
+    return SUCCESS;
 }

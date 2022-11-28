@@ -99,15 +99,15 @@ public:
     /**
      * @brief getLastID
      * get the last ID of the data base
-     * @return last ID
+     * @return error code
      */
-    int getLastID(void);
+    int getLastID(int *id);
 
     /**
      * @brief deleteAllData
      * Delete all data form data base
      * QUERY: "DELETE FROM nombreTabla;"
-     * @return
+     * @return error code
      */
     int deleteAllData(void);
 };

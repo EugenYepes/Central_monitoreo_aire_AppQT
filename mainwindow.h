@@ -79,6 +79,12 @@ private:
     }BaudRates[6];
 
     /**
+     * @brief updateDB
+     * get airData from communic, and inter in to the data base.
+     */
+    void updateDB(void);
+
+    /**
      * @brief updateDiplayData
      * update the data displayed on the display
      * call this function every time whe reciev new data, or update

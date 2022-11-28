@@ -3,6 +3,7 @@
 QString Communic::portName;
 QString Communic::baudRate;
 bool Communic::isConnected;
+bool Communic::readValue = true;
 AirData Communic::airData(-2, -2, -2, -200);
 extern AirDataDAO *g_airDataDAO;
 
@@ -18,7 +19,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
     float carbonMonoxide = -1;
     float lowerExplosiveLimit = -1;
     float temperature = -100;
-    int i, j, pos, lengthDataTag;
+    int i, j, pos, lengthDataTag, haveData = 0;
     unsigned char aux[50];
     unsigned char auxTag[10];
     unsigned char checkByte = 0;
@@ -30,7 +31,12 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
         LOG_MSG("ERROR calculated checkByte dont match with the received byte");
         return -1;
     }
-    for (i = 0, pos = 0; i < lengthData;) {
+    // check init byte and start fro the second byte
+    if (buffer[0] != 0xFF) {
+        return 1;
+    }
+
+    for (i = 1, pos = 0; i < lengthData;) {
         memset(aux, 0x00, sizeof(aux));
         memset(auxTag, 0x00, sizeof(auxTag));
         lengthDataTag = 0;
@@ -65,6 +71,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             sulfDioxide = strtof((char*)aux, NULL);
+            haveData++;
         }
         if (memcmp(auxTag, TAG_CARBON_MONOXIDE, SIZEOF_TAG(TAG_CARBON_MONOXIDE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -72,6 +79,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             carbonMonoxide = strtof((char*)aux, NULL);
+            haveData++;
         }
         if (memcmp(auxTag, TAG_LEL, SIZEOF_TAG(TAG_LEL)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -79,6 +87,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             lowerExplosiveLimit = strtof((char*)aux, NULL);
+            haveData++;
         }
         if (memcmp(auxTag, TAG_TEMPERATURE, SIZEOF_TAG(TAG_TEMPERATURE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -86,13 +95,14 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             temperature = strtof((char*)aux, NULL);
+            haveData++;
         }
 
     }
     LOG_MSG("end parced data %f %f %f %f", sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
-    if (sulfDioxide == -1 || carbonMonoxide == -1 || lowerExplosiveLimit == -1 || temperature == -100){
+    if (haveData != 4){
         LOG_MSG("the data isn't complete, INVALID");
-        return -1;
+        return 1;
     }
     AirData airDataAux(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
     *airData = airDataAux;// overload = operator why i have a warning
@@ -110,7 +120,7 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
     *lengthBuffer = 0;
     LOG_MSG("Data to make a TLV %.3f\t%.3f\t%.3f\t%.3f\n", airData.getSulfDioxide(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature())
 
-    // Culfure dioxide
+    // Sulfure dioxide
     memcpy(auxBuffer + *lengthBuffer, TAG_SULFDIOXIDE, SIZEOF_TAG(TAG_SULFDIOXIDE));
     *lengthBuffer += SIZEOF_TAG(TAG_SULFDIOXIDE);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getSulfDioxide());
@@ -227,6 +237,7 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
 void *Communic::readMessageSerial(void* arg)
 {
     QSerialPort serial;
+    AirData airDataLocal;
     serial.setPortName(portName);
     serial.setBaudRate(baudRate.toInt());
     serial.close();
@@ -241,12 +252,17 @@ void *Communic::readMessageSerial(void* arg)
         QByteArray data = serial.readAll();
         while (serial.waitForReadyRead(10))
             data += serial.readAll();
-        if (!data.isEmpty()) {
-            LOG_MSG("received data: ");
-            LOG_HEX((unsigned char*)data.data(), data.size());
-            if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airData) == 0) {
-                LOG_MSG("save recieved data in DB");
-                g_airDataDAO->insertDB(airData);
+        if (data.startsWith(0xFF)) {
+            if (!data.isEmpty()) {
+                LOG_MSG("received data: ");
+                LOG_HEX((unsigned char*)data.data(), data.size());
+                if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airDataLocal) == 0) {
+                    airData = airDataLocal;
+                    readValue = false;
+//                    AirDataDAO threadAirDataDAO;
+//                    LOG_MSG("save recieved data in DB");
+//                    threadAirDataDAO.insertDB(airData);
+                }
             }
         }
     }
@@ -254,7 +270,7 @@ void *Communic::readMessageSerial(void* arg)
 
 void Communic::createCommunicSerialThread()
 {
-    if (pthread_create(&thread, NULL, Communic::readMessageSerial, NULL) != 0) {
+    if (pthread_create(&thread, NULL, Communic::readMessageSerial, NULL) == 0) {
         isConnected = true;
         LOG_MSG("create thread %d", (int)thread);
     }
@@ -262,7 +278,7 @@ void Communic::createCommunicSerialThread()
 
 void Communic::closeCommunicSerialThread(void)
 {
-    if (pthread_kill(thread, 17) != 0) {
+    if (pthread_kill(thread, 17) == 0) {
         isConnected = false;
         LOG_MSG("close thread %d", (int)thread);
     }
