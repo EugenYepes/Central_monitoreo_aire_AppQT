@@ -184,10 +184,11 @@ ErrorCode Communic::makeTLV(AirData airData, unsigned char **buffer, int *length
 
 ErrorCode Communic::makeTLVdate(unsigned char **buffer, int *lengthBuffer)
 {
-    unsigned char auxBuffer[500] = {0};
-    unsigned char auxDataBuffer[10] = {0};
-    unsigned char auxDataSize = 0;
+    LOG_MSG("Make tlv with date and time");
+    unsigned char auxBuffer[100] = {0};
+    unsigned char auxDataBuffer[50] = {0};
     unsigned char checkByte = 0;
+    *lengthBuffer = 0;
     int idx;
 
     *(auxBuffer + *lengthBuffer) = 0xFF;
@@ -195,10 +196,9 @@ ErrorCode Communic::makeTLVdate(unsigned char **buffer, int *lengthBuffer)
 
     memcpy(auxBuffer + *lengthBuffer, TAG_DATE_TIME, SIZEOF_TAG(TAG_DATE_TIME));
     *lengthBuffer += SIZEOF_TAG(TAG_DATE_TIME);
-    auxDataSize = sprintf((char*)auxDataBuffer, "%s", getDate());
-    *(auxBuffer + *lengthBuffer) = auxDataSize;
+    *(auxBuffer + *lengthBuffer) = sprintf((char*)auxDataBuffer, "%s", "29.11.22 12:36:43");
     (*lengthBuffer)++;
-    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, "%s", getDate());
+    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, "%s", auxDataBuffer);
 
     // set a check byte to send
     for (idx = 0; idx < *lengthBuffer; idx++) {
@@ -209,7 +209,9 @@ ErrorCode Communic::makeTLVdate(unsigned char **buffer, int *lengthBuffer)
     LOG_MSG("calculated check byte to send %d\n", *(auxBuffer + *lengthBuffer));
     *buffer = (unsigned char*)malloc(*lengthBuffer);
     memcpy(*buffer, auxBuffer, *lengthBuffer);
-    return SUCCESS;
+    LOG_HEX(auxBuffer, *lengthBuffer);
+    LOG_HEX(*buffer, *lengthBuffer);
+    return 0;
 }
 
 ErrorCode Communic::analyzeRequest(int response)

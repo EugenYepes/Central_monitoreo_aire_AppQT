@@ -23,7 +23,7 @@
 #define TAG_REQUEST "\x5F\x04"
 #define TAG_DATE_TIME "\x5F\x05"
 
-#define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data))
+#define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data)) - 1
 #define NUM_DECIMALS_FORMAT "%.3f"
 
 class Communic
