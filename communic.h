@@ -97,10 +97,12 @@ public:
      */
     static ErrorCode analyzeRequest(int request);
 
+
     //getters and setters
     AirData getAirData(){return airData;};
     static bool getReadValue() {return readValue;};
     static void setReadValue(bool readValue) {Communic::readValue = readValue;};
+
 private:
     /**
      * @brief hexToAscii convert a hexadecimal array to a char array (string)
@@ -122,7 +124,10 @@ private:
      * @param [out] tamOut
      * @return 0ErrorCode
      */
+
     ErrorCode asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
+
+    int asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
 };
 
 #endif // COMMUNIC_H
