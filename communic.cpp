@@ -1,20 +1,46 @@
 #include "communic.h"
 
-Communic::Communic()
-{
+QString Communic::portName;
+QString Communic::baudRate;
+bool Communic::isConnected;
+bool Communic::readValue = true;
+AirData Communic::airData(-2, -2, -2, -200);
+unsigned char Communic::dataToSend[255];
+int Communic::sizeMsgToSend;
+extern AirDataDAO *g_airDataDAO;
 
+Communic::Communic(QString baudRate, QString portName)
+{
+    this->baudRate = baudRate;
+    this->portName = portName;
 }
 
-int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData)
+ErrorCode Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData)
 {
-    float oxygen = -1;
+    float sulfDioxide = -1;
     float carbonMonoxide = -1;
     float lowerExplosiveLimit = -1;
     float temperature = -100;
-    int i, j, pos, lengthDataTag;
+    int i, j, pos, lengthDataTag, haveData = 0;
     unsigned char aux[50];
     unsigned char auxTag[10];
-    for (i = 0, pos = 0; i < lengthData;) {
+    unsigned char checkByte = 0;
+    int request = 0;
+    //check byte
+    for (i = 0; i < (lengthData - 1); i++) {
+        checkByte ^= buffer[i];
+    }
+    if (buffer[i] != checkByte) {
+        LOG_MSG("ERROR calculated checkByte dont match with the received byte");
+        return ERROR_UNKNOWN;
+    }
+    // check init byte and start fro the second byte
+    if (buffer[0] != 0xFF) {
+        LOG_MSG("init byte don't match")
+        return ERROR_UNKNOWN;
+    }
+
+    for (i = 1, pos = 0; i < lengthData;) {
         memset(aux, 0x00, sizeof(aux));
         memset(auxTag, 0x00, sizeof(auxTag));
         lengthDataTag = 0;
@@ -36,19 +62,20 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             if (buffer[i] != 0x80) {// is not a definite length
                 lengthDataTag += buffer[i] & 0x7F;
             } else {
-                printf("indefinite length not developed\n");
+                LOG_MSG("indefinite length not developed");
             }
         }
         i++;
         pos++;
         // get data
         memset(aux, 0x00, sizeof(aux));
-        if (memcmp(auxTag, TAG_OXYGEN, SIZEOF_TAG(TAG_OXYGEN)) == 0) {
+        if (memcmp(auxTag, TAG_SULFDIOXIDE, SIZEOF_TAG(TAG_SULFDIOXIDE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
                 aux[j] =  buffer [i];
             }
             aux[j] = '\0';
-            oxygen = strtof((char*)aux, NULL);
+            sulfDioxide = strtof((char*)aux, NULL);
+            haveData++;
         }
         if (memcmp(auxTag, TAG_CARBON_MONOXIDE, SIZEOF_TAG(TAG_CARBON_MONOXIDE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -56,6 +83,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             carbonMonoxide = strtof((char*)aux, NULL);
+            haveData++;
         }
         if (memcmp(auxTag, TAG_LEL, SIZEOF_TAG(TAG_LEL)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -63,6 +91,7 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             lowerExplosiveLimit = strtof((char*)aux, NULL);
+            haveData++;
         }
         if (memcmp(auxTag, TAG_TEMPERATURE, SIZEOF_TAG(TAG_TEMPERATURE)) == 0) {
             for (j = 0; j < lengthDataTag; i++, j++) {
@@ -70,39 +99,52 @@ int Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *ai
             }
             aux[j] = '\0';
             temperature = strtof((char*)aux, NULL);
+            haveData++;
         }
-
+        if (memcmp(auxTag, TAG_REQUEST, SIZEOF_TAG(TAG_REQUEST)) == 0) {
+            for (j = 0; j < lengthDataTag; i++, j++) {
+                aux[j] =  buffer [i];
+            }
+            aux[j] = '\0';
+            request = atoi((char*)aux);
+            analyzeRequest(request);
+            return REQUEST_DATA;
+        }
     }
-    printf("in function %s %f %f %f %f\n", __func__, oxygen, carbonMonoxide, lowerExplosiveLimit, temperature);
-    if (oxygen == -1 || carbonMonoxide == -1 || lowerExplosiveLimit == -1 || temperature == -100){
-        printf("the data isn't complete, INVALID\n");
-        return -1;
+    LOG_MSG("end parced data %f %f %f %f", sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
+    if (haveData != 4) {
+        LOG_MSG("the data isn't complete, INVALID");
+        return ERROR_UNKNOWN;
     }
-    AirData airDataAux(oxygen, carbonMonoxide, lowerExplosiveLimit, temperature);
+    AirData airDataAux(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
     *airData = airDataAux;// overload = operator why i have a warning
-    return 0;
+    return SUCCESS;
 }
 
-int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer)
+ErrorCode Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer)
 {
     unsigned char auxBuffer[500] = {0};
     unsigned char auxDataBuffer[10] = {0};
     unsigned char auxDataSize = 0;
+    unsigned char checkByte = 0;
+    int idx;
+
     *lengthBuffer = 0;
+    LOG_MSG("Data to make a TLV %.3f\t%.3f\t%.3f\t%.3f\n", airData.getSulfDioxide(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature())
 
-    printf("Air data in function %s %.3f\t%.3f\t%.3f\t%.3f\n", __func__, airData.getOxygen(), airData.getCarbonMonoxide(), airData.getLowerExplosiveLimit(), airData.getTemperature());
-
-    // oxygen
-    memcpy(auxBuffer + *lengthBuffer, TAG_OXYGEN, SIZEOF_TAG(TAG_OXYGEN));
-    *lengthBuffer += SIZEOF_TAG(TAG_OXYGEN);
-    auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getOxygen());
+    *(auxBuffer + *lengthBuffer) = 0xFF;
+    (*lengthBuffer)++;
+    // Sulfure dioxide
+    memcpy(auxBuffer + *lengthBuffer, TAG_SULFDIOXIDE, SIZEOF_TAG(TAG_SULFDIOXIDE));
+    *lengthBuffer += SIZEOF_TAG(TAG_SULFDIOXIDE);
+    auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getSulfDioxide());
     *(auxBuffer + *lengthBuffer) = auxDataSize;
     (*lengthBuffer)++;
-    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, NUM_DECIMALS_FORMAT, airData.getOxygen());
+    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, NUM_DECIMALS_FORMAT, airData.getSulfDioxide());
 
     memset(auxDataBuffer, 0x00, sizeof(auxDataBuffer));
 
-    // carbonMonoxide
+    // Carbon Monoxide
     memcpy(auxBuffer + *lengthBuffer, TAG_CARBON_MONOXIDE, SIZEOF_TAG(TAG_CARBON_MONOXIDE));
     *lengthBuffer += SIZEOF_TAG(TAG_CARBON_MONOXIDE);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getCarbonMonoxide());
@@ -112,7 +154,7 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
 
     memset(auxDataBuffer, 0x00, sizeof(auxDataBuffer));
 
-    // lowerExplosiveLimit
+    // Lower Explosive Limit
     memcpy(auxBuffer + *lengthBuffer, TAG_LEL, SIZEOF_TAG(TAG_LEL));
     *lengthBuffer += SIZEOF_TAG(TAG_LEL);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getLowerExplosiveLimit());
@@ -122,32 +164,90 @@ int Communic::makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer
 
     memset(auxDataBuffer, 0x00, sizeof(auxDataBuffer));
 
-    // temperature
+    // Temperature
     memcpy(auxBuffer + *lengthBuffer, TAG_TEMPERATURE, SIZEOF_TAG(TAG_TEMPERATURE));
     *lengthBuffer += SIZEOF_TAG(TAG_TEMPERATURE);
     auxDataSize = sprintf((char*)auxDataBuffer, NUM_DECIMALS_FORMAT, airData.getTemperature());
     *(auxBuffer + *lengthBuffer) = auxDataSize;
     (*lengthBuffer)++;
     *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, "%.3f", airData.getTemperature());
-
+    // set a check byte to send
+    for (idx = 0; idx < *lengthBuffer; idx++) {
+        checkByte ^= auxBuffer[idx];
+    }
+    *(auxBuffer + *lengthBuffer) = checkByte;
+    (*lengthBuffer)++;
+    LOG_MSG("calculated check byte to send %d\n", *(auxBuffer + *lengthBuffer));
     *buffer = (unsigned char*)malloc(*lengthBuffer);
     memcpy(*buffer, auxBuffer, *lengthBuffer);
-    return 0;
+    return SUCCESS;
 }
 
-int Communic::hexToAscii(unsigned char *buffInHex, int tamIn, unsigned char **buffOutChar, int *tamOut)
+ErrorCode Communic::makeTLVdate(unsigned char **buffer, int *lengthBuffer)
+{
+    LOG_MSG("Make tlv with date and time");
+    unsigned char auxBuffer[100] = {0};
+    unsigned char auxDataBuffer[50] = {0};
+    unsigned char checkByte = 0;
+    int idx;
+
+    *lengthBuffer = 0;
+    *(auxBuffer + *lengthBuffer) = 0xFF;
+    (*lengthBuffer)++;
+
+    memcpy(auxBuffer + *lengthBuffer, TAG_DATE_TIME, SIZEOF_TAG(TAG_DATE_TIME));
+    *lengthBuffer += SIZEOF_TAG(TAG_DATE_TIME);
+    *(auxBuffer + *lengthBuffer) = sprintf((char*)auxDataBuffer, "%s", getDate());
+    (*lengthBuffer)++;
+    *lengthBuffer += sprintf((char*)auxBuffer + *lengthBuffer, "%s", auxDataBuffer);
+
+    // set a check byte to send
+    for (idx = 0; idx < *lengthBuffer; idx++) {
+        checkByte ^= auxBuffer[idx];
+    }
+    *(auxBuffer + *lengthBuffer) = checkByte;
+    (*lengthBuffer)++;
+    LOG_MSG("calculated check byte to send %d\n", *(auxBuffer + *lengthBuffer));
+    *buffer = (unsigned char*)malloc(*lengthBuffer);
+    memcpy(*buffer, auxBuffer, *lengthBuffer);
+    return SUCCESS;
+}
+
+ErrorCode Communic::analyzeRequest(int response)
+{
+    unsigned char *buffer = NULL;
+    int lengthBuffer = 0;
+    switch (response) {
+        case 0:
+            // nothing to send
+            break;
+        case 1:
+            if(sizeMsgToSend == 0) {
+                makeTLVdate(&buffer, &lengthBuffer);
+                memcpy(dataToSend, buffer, lengthBuffer);
+                sizeMsgToSend = lengthBuffer;
+            } else {
+                LOG_MSG("ERROR: have data to send");
+                return ERROR_UNKNOWN;
+            }
+            break;
+    }
+    return SUCCESS;
+}
+
+ErrorCode Communic::hexToAscii(unsigned char *buffInHex, int tamIn, unsigned char **buffOutChar, int *tamOut)
 {
     int i, j;
     // BIT_T bitNum;
 
     if (buffInHex == NULL){
-        return -1;
+        return ERROR_NULL_POINTER;
     }
     *tamOut = (tamIn * 2) + 1;
     *buffOutChar = (unsigned char*)malloc((*tamOut) * sizeof(unsigned char));// malloc no funca para el micro, no se le puede pedir al SO
     if (*buffOutChar == NULL) {
-        printf("ERROR at malloc memory at function %s", __func__);
-        return -1;
+        LOG_MSG("ERROR at malloc memory dont get");
+        return ERROR_ASK_MEMORY;
     }
 
     for (i = 0, j = 0; i < tamIn; i++, j++) {
@@ -164,23 +264,23 @@ int Communic::hexToAscii(unsigned char *buffInHex, int tamIn, unsigned char **bu
         }
     }
     (*buffOutChar)[j] = '\0';
-    return 0;
+    return SUCCESS;
 }
 
-int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut)
+ErrorCode Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut)
 {
     int i, j;
     unsigned char aux1, aux2;
 
     if (buffInChar == NULL){
-        return -1;
+        return ERROR_NULL_POINTER;
     }
 
     *tamOut = tamIn/2;
     *buffOutHex = (unsigned char*)malloc((*tamOut) * sizeof(unsigned char));
     if (*buffOutHex == NULL) {
-        printf("ERROR at malloc memory at function %s", __func__);
-        return -1;
+        LOG_MSG("ERROR at malloc memory dont get");
+        return ERROR_NULL_POINTER;
     }
 
     for (i = 0, j = 0; j < *tamOut; i++, j++) {
@@ -197,5 +297,61 @@ int Communic::asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **b
         }
         (*buffOutHex)[j] = (aux1 << 4) | aux2;
     }
-    return 0;
+    return SUCCESS;
 }
+
+void *Communic::readMessageSerial(void* arg)
+{
+    QSerialPort serial;
+    AirData airDataLocal;
+    serial.setPortName(portName);
+    serial.setBaudRate(baudRate.toInt());
+    serial.close();
+
+
+    if (!serial.open(QIODevice::ReadWrite)) {
+        LOG_MSG("serial port doesn't open");
+        return NULL;
+    }
+    sleep(1);
+    while (true) {
+        QByteArray data = serial.readAll();
+        if(sizeMsgToSend > 0) {
+            LOG_MSG("Data to send:");
+            LOG_HEX(dataToSend, sizeMsgToSend);
+            if (serial.write((char*)dataToSend, (qint64)sizeMsgToSend) > 0) {
+                sizeMsgToSend = 0;
+                memset(dataToSend, 0x00, sizeof(dataToSend));
+            }
+        }
+        while (serial.waitForReadyRead(10))
+            data += serial.readAll();
+        if (data.startsWith(0xFF)) {
+            if (!data.isEmpty()) {
+                LOG_MSG("received data: ");
+                LOG_HEX((unsigned char*)data.data(), data.size());
+                if (parseAirDataTLV((unsigned char*)data.data(), data.size(), &airDataLocal) == 0) {
+                    airData = airDataLocal;
+                    readValue = false;
+                }
+            }
+        }
+    }
+}
+
+void Communic::createCommunicSerialThread()
+{
+    if (pthread_create(&thread, NULL, Communic::readMessageSerial, NULL) == 0) {
+        isConnected = true;
+        LOG_MSG("create thread %d", (int)thread);
+    }
+}
+
+void Communic::closeCommunicSerialThread(void)
+{
+    if (pthread_kill(thread, 17) == 0) {
+        isConnected = false;
+        LOG_MSG("close thread %d", (int)thread);
+    }
+}
+

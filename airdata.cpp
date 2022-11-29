@@ -4,19 +4,18 @@ AirData::AirData()
 {
 }
 
-AirData::AirData(float oxygen, float carbonMonoxide, float lowerExplosiveLimit, float temperature)
+AirData::AirData(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature)
 {
-    this->oxygen = oxygen;
+    this->sulfDioxide = sulfDioxide;
     this->carbonMonoxide = carbonMonoxide;
     this->lowerExplosiveLimit = lowerExplosiveLimit;
     this->temperature = temperature;
 }
 
-AirData AirData::operator=(AirData airData)
+void AirData::loadDataFromDB(float sulfDioxide, float carbonMonoxide, float lowerExplosiveLimit, float temperature)
 {
-    oxygen = airData.oxygen;
-    carbonMonoxide = airData.carbonMonoxide;
-    lowerExplosiveLimit = airData.lowerExplosiveLimit;
-    temperature = airData.temperature;
-    return airData;
+    this->sulfDioxide = sulfDioxide;
+    this->carbonMonoxide = carbonMonoxide;
+    this->lowerExplosiveLimit = lowerExplosiveLimit;
+    this->temperature = temperature;
 }
