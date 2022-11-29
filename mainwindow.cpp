@@ -99,6 +99,7 @@ void MainWindow::showDataChart(void)
         *seriesCarbonMonoxide << QPointF(i, airData[i].getCarbonMonoxide());
     }
     seriesCarbonMonoxide->setName("Carbon Monoxide");
+    seriesCarbonMonoxide->setColor(QColor::fromRgb(0xFFFFFF));
 
 
     // Lower Explosive Limit
