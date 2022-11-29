@@ -20,18 +20,21 @@
 #define TAG_CARBON_MONOXIDE "\x5F\x01"
 #define TAG_LEL "\x5F\x02"
 #define TAG_TEMPERATURE "\x5F\x03"
+#define TAG_REQUEST "\x5F\x04"
+#define TAG_DATE_TIME "\x5F\x05"
 
 #define SIZEOF_TAG(data) (sizeof(data)/sizeof(*data))
 #define NUM_DECIMALS_FORMAT "%.3f"
 
 class Communic
 {
-    bool isFormatTLV;
     static QString baudRate;
     static QString portName;
     pthread_t thread;
     static AirData airData;
     static bool readValue;
+    static unsigned char dataToSend[255];
+    static int sizeMsgToSend;
 public:
     static bool isConnected;
     /**
@@ -46,7 +49,7 @@ public:
      * @param[out] airData fill the air data object
      * @return Error code
      */
-    static int parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData);
+    static ErrorCode parseAirDataTLV(unsigned char *buffer, int lengthData, AirData *airData);
 
     /**
      * @brief makeTLV
@@ -56,14 +59,16 @@ public:
      * @return Error Code
      * @todo
      */
-    static int makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer);
+    static ErrorCode makeTLV(AirData airData, unsigned char **buffer, int *lengthBuffer);
 
     /**
-     * @brief sendMessageSerial
-     * send the buffer message through the serial port
-     * @return
+     * @brief makeTLVdate
+     * make a tlv containing the date
+     * @param buffer
+     * @param lengthBuffer
+     * @return Error Code
      */
-    static int sendMessageSerial(void);
+    static ErrorCode makeTLVdate(unsigned char **buffer, int *lengthBuffer);
 
     /**
      * @brief readMessageSerial
@@ -71,12 +76,6 @@ public:
      * @return
      */
     static void* readMessageSerial(void*);
-
-    /**
-     * @brief setMessageToSend
-     * @param buffer
-     */
-    void setMessageToSend(unsigned char *buffer);
 
     /**
      * @brief createCommunicSerialThread
@@ -90,6 +89,15 @@ public:
      */
     void closeCommunicSerialThread(void);
 
+    /**
+     * @brief analyzeRequest
+     * analyse a request message and get action
+     * @param request
+     * @return Error Code
+     */
+    static ErrorCode analyzeRequest(int request);
+
+    //getters and setters
     AirData getAirData(){return airData;};
     static bool getReadValue() {return readValue;};
     static void setReadValue(bool readValue) {Communic::readValue = readValue;};
@@ -101,9 +109,9 @@ private:
      * @param [in] tamIn
      * @param [out] buffOutChar
      * @param [out] tamOut
-     * @return 0 for success -1 otherwise
+     * @return ErrorCode
      */
-    int hexToAscii(unsigned char *buffInHex, int tamIn, unsigned char **buffOutChar, int *tamOut);
+    ErrorCode hexToAscii(unsigned char *buffInHex, int tamIn, unsigned char **buffOutChar, int *tamOut);
 
     /**
      * @brief asciiToHex convert a char array(string) to a hexadecimal array
@@ -112,9 +120,9 @@ private:
      * @param [in] tamIn
      * @param [out] buffOutHex
      * @param [out] tamOut
-     * @return 0 for success -1 otherwise
+     * @return 0ErrorCode
      */
-    int asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
+    ErrorCode asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
 };
 
 #endif // COMMUNIC_H

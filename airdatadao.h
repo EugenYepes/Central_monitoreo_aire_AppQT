@@ -36,8 +36,6 @@
 #define SQL_QUERY_FORMAT_DELETE_ALL "%s%s%s;"
 #define SQL_QUERY_FORMAT_SELECT_BETWEEN_ID "%s*%s%s%s%s>=%d%s%s<=%d;"
 
-
-#define DATE_FORMAT "dd.MM.yyyy hh:mm:ss"
 class AirDataDAO
 {
     QSqlDatabase db;
@@ -50,7 +48,7 @@ public:
      * @param[in] data
      * @return Error Code
      */
-    int insertDB(AirData data);
+    ErrorCode insertDB(AirData data);
 
     /**
      * @brief selectDB
@@ -59,7 +57,7 @@ public:
      * @param[in] where id
      * @return Error Code
      */
-    int selectDB(AirData *data, int whereID);
+    ErrorCode selectDB(AirData *data, int whereID);
 
     /**
      * @brief selectBetweenIntervalDB
@@ -71,9 +69,9 @@ public:
      * @param[in uot] numbElements
      * @param[in] maxId
      * @param[in] lowID
-     * @return
+     * @return Error Code
      */
-    int selectBetweenIntervalDB(AirData *data, int *numbElements, int maxId, int lowID);
+    ErrorCode selectBetweenIntervalDB(AirData *data, int *numbElements, int maxId, int lowID);
 
     /**
      * @brief selectDB
@@ -82,9 +80,9 @@ public:
      * if the table doesn't have enough rows in #numbElements is set the number of readed elements
      * @param[out] data
      * @param[in out] numbElements      number of elements of data, reciev the size of data and returns the number of loaded
-     * @return error code
+     * @return Error code
      */
-    int selectAllDB(AirData *data, int *numbElements);
+    ErrorCode selectAllDB(AirData *data, int *numbElements);
 
     /**
      * @brief deleteDB
@@ -94,14 +92,14 @@ public:
      * @param[in] whereID
      * @return Error Code
      */
-    int deleteDB(int whereID);
+    ErrorCode deleteDB(int whereID);
 
     /**
      * @brief getLastID
      * get the last ID of the data base
      * @return error code
      */
-    int getLastID(int *id);
+    ErrorCode getLastID(int *id);
 
     /**
      * @brief deleteAllData
@@ -109,7 +107,7 @@ public:
      * QUERY: "DELETE FROM nombreTabla;"
      * @return error code
      */
-    int deleteAllData(void);
+    ErrorCode deleteAllData(void);
 };
 
 #endif // AIRDATADAO_H

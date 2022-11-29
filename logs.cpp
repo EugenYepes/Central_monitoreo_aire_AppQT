@@ -13,3 +13,10 @@ void logHex(unsigned char *data, int size)
     }
     printf("\n");
 }
+
+char *getDate(void){
+    QDateTime qDate = QDateTime::currentDateTime();
+    QString sDate = qDate.toString(DATE_FORMAT);
+    QByteArray bDate = sDate.toLocal8Bit();
+    return (char*)bDate.data();
+}
