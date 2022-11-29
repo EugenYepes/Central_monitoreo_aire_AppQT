@@ -126,8 +126,6 @@ private:
      */
 
     ErrorCode asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
-
-    int asciiToHex(unsigned char *buffInChar, int tamIn, unsigned char **buffOutHex, int *tamOut);
 };
 
 #endif // COMMUNIC_H
