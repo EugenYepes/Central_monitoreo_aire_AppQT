@@ -13,6 +13,7 @@
 
 typedef enum errors{
     SUCCESS,
+    REQUEST_DATA,
     ERROR_NULL_POINTER,
     ERROR_OPEN,
     ERROR_WRITE,

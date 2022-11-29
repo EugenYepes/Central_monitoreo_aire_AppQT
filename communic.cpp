@@ -107,6 +107,8 @@ ErrorCode Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirDa
             }
             aux[j] = '\0';
             request = atoi((char*)aux);
+            analyzeRequest(request);
+            return REQUEST_DATA;
         }
     }
     LOG_MSG("end parced data %f %f %f %f", sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
@@ -116,7 +118,6 @@ ErrorCode Communic::parseAirDataTLV(unsigned char *buffer, int lengthData, AirDa
     }
     AirData airDataAux(sulfDioxide, carbonMonoxide, lowerExplosiveLimit, temperature);
     *airData = airDataAux;// overload = operator why i have a warning
-    analyzeRequest(request);
     return SUCCESS;
 }
 
@@ -316,6 +317,8 @@ void *Communic::readMessageSerial(void* arg)
     while (true) {
         QByteArray data = serial.readAll();
         if(sizeMsgToSend > 0) {
+            LOG_MSG("Data to send:");
+            LOG_HEX(dataToSend, sizeMsgToSend);
             if (serial.write((char*)dataToSend, (qint64)sizeMsgToSend) > 0) {
                 sizeMsgToSend = 0;
                 memset(dataToSend, 0x00, sizeof(dataToSend));
