@@ -316,7 +316,7 @@ void *Communic::readMessageSerial(void* arg)
     while (true) {
         QByteArray data = serial.readAll();
         if(sizeMsgToSend > 0) {
-            if (serial.write("hola") > 0) {
+            if (serial.write((char*)dataToSend, (qint64)sizeMsgToSend) > 0) {
                 sizeMsgToSend = 0;
                 memset(dataToSend, 0x00, sizeof(dataToSend));
             }
