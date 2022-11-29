@@ -1,5 +1,5 @@
 QT       += core gui sql charts
-
+QT       += serialport
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
@@ -12,7 +12,7 @@ SOURCES += \
     airdata.cpp \
     airdatadao.cpp \
     communic.cpp \
-    graphictablegenerator.cpp \
+    logs.cpp \
     main.cpp \
     mainwindow.cpp \
     test.cpp
@@ -21,7 +21,7 @@ HEADERS += \
     airdata.h \
     airdatadao.h \
     communic.h \
-    graphictablegenerator.h \
+    logs.h \
     mainwindow.h \
     test.h
 
