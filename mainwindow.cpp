@@ -18,6 +18,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateWrap()));
     timer.start(1000);
+
+    setLabelText();
+
+    for (int i = 0; i<30; i++) {
+        AirData airData(0.1 * i, 0.2 * i, 0.3 * i, 0.4 * i);
+        g_airDataDAO->insertDB(airData);
+    }
 }
 
 
@@ -49,19 +56,15 @@ void MainWindow::updateDiplayData()
         LOG_MSG("Last id not found");
         return;
     }
-//    if (communic->isConnected) {
-        LOG_MSG("update display data");
+    LOG_MSG("update display data");
 
-        AirData airData;
-        g_airDataDAO->selectDB(&airData, lastID);
+    AirData airData;
+    g_airDataDAO->selectDB(&airData, lastID);
 
-        ui->lcdNumber_sulfDioxide->display(airData.getSulfDioxide());
-        ui->lcdNumber_carbonMonoxide->display(airData.getCarbonMonoxide());
-        ui->lcdNumber_lel->display(airData.getLowerExplosiveLimit());
-        ui->lcdNumber_temperature->display(airData.getTemperature());
-//    } else {
-//      show message the serial port isn't connect
-//    }
+    ui->lcdNumber_sulfDioxide->display(airData.getSulfDioxide());
+    ui->lcdNumber_carbonMonoxide->display(airData.getCarbonMonoxide());
+    ui->lcdNumber_lel->display(airData.getLowerExplosiveLimit());
+    ui->lcdNumber_temperature->display(airData.getTemperature());
 }
 
 
@@ -91,6 +94,7 @@ void MainWindow::showDataChart(void)
         *seriesSulfurDioxide << QPointF(i, airData[i].getSulfDioxide());
     }
     seriesSulfurDioxide->setName("Sulfur Dioxide");
+    seriesSulfurDioxide->setColor(QColor::fromRgb(0x5DFF00));
 
     // Carbon Monoxide
     QLineSeries *seriesCarbonMonoxide = new QLineSeries();
@@ -99,7 +103,7 @@ void MainWindow::showDataChart(void)
         *seriesCarbonMonoxide << QPointF(i, airData[i].getCarbonMonoxide());
     }
     seriesCarbonMonoxide->setName("Carbon Monoxide");
-    seriesCarbonMonoxide->setColor(QColor::fromRgb(0xFFFFFF));
+    seriesCarbonMonoxide->setColor(QColor::fromRgb(0xFFC000));
 
 
     // Lower Explosive Limit
@@ -109,6 +113,7 @@ void MainWindow::showDataChart(void)
         *seriesLEL << QPointF(i, airData[i].getLowerExplosiveLimit());
     }
     seriesLEL->setName("Lower Explosive Limit");
+    seriesLEL->setColor(QColor::fromRgb(0x0000FF));
 
 
     // Temperature
@@ -118,11 +123,12 @@ void MainWindow::showDataChart(void)
         *seriesTemperature << QPointF(i, airData[i].getTemperature());
     }
     seriesTemperature->setName("Temperature");
+    seriesTemperature->setColor(QColor::fromRgb(0xFF0000));
 
 
     // create chart
     QChart *chart = new QChart();
-    chart->setTitle("Air data historical");
+    chart->setTitle("<P><b><i><font color='#000000' font_size=5> Air Data Historical </font></i></b></P></br>");
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
 
@@ -135,6 +141,10 @@ void MainWindow::showDataChart(void)
     chart->createDefaultAxes();
 
     // show chart
+    QChartView *chartViewClean = new QChartView();
+    chartViewClean->setRenderHint(QPainter::Antialiasing);
+    chartViewClean->setParent(ui->horizontalFrame_chart);
+
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
     chartView->setParent(ui->horizontalFrame_chart);
@@ -174,6 +184,26 @@ void MainWindow::showPorts(void)
         ui->comboBox_serialPorts->addItem(info.portName());
 }
 
+void MainWindow::setLabelText(void)
+{
+    QString openTags = "<P><b><i><font color='#5DFF00' font_size=4>";
+    QString closeTags = "</font></i></b></P></br>";
+    QString labelText = "Dioxido de azufre (SO2)";
+    ui->label_SulfDioxide->setText(openTags + labelText + closeTags);
+
+    openTags = "<P><b><i><font color='#FFC000' font_size=4>";
+    labelText = "Monox de carbono (CO)";
+    ui->label_CarbonMonoxide->setText(openTags + labelText + closeTags);
+
+    openTags = "<P><b><i><font color='#0000FF' font_size=4>";
+    labelText = "Indice de explosividad (%LEL)";
+    ui->label_lel->setText(openTags + labelText + closeTags);
+
+    openTags = "<P><b><i><font color='#FF0000' font_size=4>";
+    labelText = "Temperatura";
+    ui->label_temperature->setText(openTags + labelText + closeTags);
+}
+
 void MainWindow::on_pushButton_serialStart_clicked()
 {
     communic = new Communic(ui->comboBox_serialBaudRate->currentText(), ui->comboBox_serialPorts->currentText());
@@ -189,7 +219,6 @@ void MainWindow::on_pushButton_serialClose_clicked()
     } else {
         LOG_MSG("trhead is not open, cant close the thread");
     }
-//    pthread_join(serialThread, NULL);
 }
 
 

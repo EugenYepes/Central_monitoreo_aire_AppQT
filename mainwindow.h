@@ -109,6 +109,12 @@ private:
      */
     void showPorts(void);
 
+    /**
+     * @brief setLabelText
+     * set the labels text with format and colors
+     */
+    void setLabelText(void);
+
 };
 
 #endif // MAINWINDOW_H

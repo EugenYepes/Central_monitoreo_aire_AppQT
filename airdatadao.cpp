@@ -3,9 +3,8 @@
 AirDataDAO::AirDataDAO()
 {
     db = QSqlDatabase::addDatabase("QSQLITE");
-    ///<@todo get path of the application or only use the local path
-    db.setDatabaseName("C:/INFO2/AppQt/Central_monitoreo_aire_AppQT/airdata.db");
-    //C:\INFO2\AppQt\Central_monitoreo_aire_AppQT
+
+    db.setDatabaseName("../CentralMonitoreo/airdata.db");
 }
 
 ErrorCode AirDataDAO::insertDB(AirData data)

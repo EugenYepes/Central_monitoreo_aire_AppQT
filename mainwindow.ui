@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="minimumSize">
@@ -159,6 +159,9 @@
           <height>24</height>
          </rect>
         </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>Start</string>
         </property>
@@ -172,6 +175,9 @@
           <height>24</height>
          </rect>
         </property>
+        <property name="cursor">
+         <cursorShape>ArrowCursor</cursorShape>
+        </property>
        </widget>
        <widget class="QComboBox" name="comboBox_serialPorts">
         <property name="geometry">
@@ -181,6 +187,9 @@
           <width>72</width>
           <height>24</height>
          </rect>
+        </property>
+        <property name="cursor">
+         <cursorShape>ArrowCursor</cursorShape>
         </property>
        </widget>
        <widget class="QLabel" name="label_serialBaudRate">
@@ -218,6 +227,9 @@
           <height>24</height>
          </rect>
         </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
+        </property>
         <property name="text">
          <string>Close</string>
         </property>
@@ -225,11 +237,14 @@
        <widget class="QPushButton" name="pushButto_deleteAllDB">
         <property name="geometry">
          <rect>
-          <x>720</x>
+          <x>699</x>
           <y>170</y>
-          <width>80</width>
+          <width>101</width>
           <height>24</height>
          </rect>
+        </property>
+        <property name="cursor">
+         <cursorShape>PointingHandCursor</cursorShape>
         </property>
         <property name="text">
          <string>Clean Data Base</string>
